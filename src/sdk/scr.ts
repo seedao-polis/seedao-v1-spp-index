@@ -1,9 +1,20 @@
-import { ethers, WebSocketProvider, JsonRpcProvider } from "ethers";
+import { ethers, WebSocketProvider, JsonRpcProvider, StructFragment } from "ethers";
+import { SeepassAPI, UserChainData } from "./seepass_api";
+import { SCRAddr } from "../addr_and_rpc";
 
 export namespace scr {
   const ABI: string[] = [
     "event Transfer(address indexed,address indexed,uint256)",
   ];
+
+  export interface TransferEvent {
+    from: string;
+    to: string;
+    amount: bigint;
+    blockNumber: number
+  };
+
+  var userScrRecords: Record<string, bigint> = {};;
 
   // history get all `Transfer` events start at `fromBlock`
   // `amount`'s decimals is `18`
@@ -12,7 +23,7 @@ export namespace scr {
     httpRPC: string,
     fromBlock?: number,
   ): Promise<
-    [from: string, to: string, amount: bigint, blockNumber: number][]
+    TransferEvent[]
   > {
     const contract = new ethers.Contract(
       addr,
@@ -28,10 +39,15 @@ export namespace scr {
         event.data,
         event.topics,
       );
-      console.log(
-        `History Transfer Event: ${result[0]} ${result[1]} ${result[2]} ${event.blockNumber}`,
-      );
-      return [result[0], result[1], result[2], event.blockNumber]; // named type: [from: string, to: string, amount: bigint, blockNumber: number]
+      // console.log(
+      //   `History Transfer Event: ${result[0]} ${result[1]} ${result[2]} ${event.blockNumber}`,
+      // );
+      return {
+        from: result[0],
+        to: result[1],
+        amount: result[2],
+        blockNumber: event.blockNumber,
+      }
     });
   }
 
@@ -40,10 +56,7 @@ export namespace scr {
     addr: string,
     wsRPC: string,
     callback: (
-      from: string,
-      to: string,
-      amount: bigint,
-      blockNumber: number,
+      r: TransferEvent
     ) => void,
   ) {
     const contract = new ethers.Contract(
@@ -56,7 +69,61 @@ export namespace scr {
       console.log(
         `New Transfer Event: ${from} ${to} ${amount} ${event.log.blockNumber}`,
       );
-      callback(from, to, amount, event.log.blockNumber);
+      callback({
+        from: ethers.getAddress(from),
+        to: ethers.getAddress(to),
+        amount: amount,
+        blockNumber: event.log.blockNumber,
+      });
+      // callback(from, to, amount, event.log.blockNumber);
     });
+  }
+
+
+  // Parse scr records collected by history or subscriber and filter out changed user data
+  // The returned records will be used to generate seepass request to update user SCR amount in DB
+  export function getUpdatedScrRecords(records: TransferEvent[]): Record<string, bigint> {
+    var changedScrAccounts: Record<string, boolean> = {};
+
+    for (const r of records) {
+      if (ethers.getAddress(r.from) === ethers.ZeroAddress) {
+        if (userScrRecords[ethers.getAddress(r.to)] === undefined) {
+          userScrRecords[ethers.getAddress(r.to)] = 0n;
+        }
+        userScrRecords[ethers.getAddress(r.to)] += r.amount;
+        changedScrAccounts[ethers.getAddress(r.to)] = true;
+      } else {
+        console.log(`found transfer: ${r.from}, ${r.to}, ${r.amount}`);
+        userScrRecords[ethers.getAddress(r.from)] -= r.amount;
+        userScrRecords[ethers.getAddress(r.to)] += r.amount;
+        changedScrAccounts[ethers.getAddress(r.from)] = true;
+        changedScrAccounts[ethers.getAddress(r.to)] = true;
+      }
+    }
+
+    var updatedRecords = Object.fromEntries(
+      Object.entries(userScrRecords)
+        .filter((r) => { return changedScrAccounts[r[0]] })
+    );
+    return updatedRecords;
+  }
+
+  // Buid Spp data service API request and update user's scr data
+  export async function sendDataToSpp(seepassApi: SeepassAPI, updatedRecords: Record<string, bigint>) {
+    const payload: UserChainData[] = Object.entries(updatedRecords).map((r) => {
+      return {
+        wallet: r[0],
+        chainId: 1,
+        contractAddr: SCRAddr,
+        contractType: "erc20",
+        amount: (r[1] / BigInt(10 ** 18)).toString(),
+        tokenId: "",
+        tokenUri: "",
+        name: "SCR",
+        symbol: "SCR",
+      }
+    });
+
+    await seepassApi.batchUpdateUserChainAssets(payload);
   }
 }

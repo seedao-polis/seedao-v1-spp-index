@@ -10,10 +10,16 @@ import {
   SCRAddr,
   SNSAddr,
 } from "./addr_and_rpc";
+import { SeepassAPI } from "./sdk/seepass_api";
 
 async function main() {
   // init database
   const client = new PrismaClient();
+
+  // Init SeePASS API
+  const seepassApi = new SeepassAPI(process.env.SEEPASS_BASE || "http://localhost:3000");
+  // var scrRecords: Record<string, bigint> = {};
+  // var changedScrAccounts: Record<string, boolean> = {};
 
   // handle history events
   // ---> sns
@@ -34,12 +40,17 @@ async function main() {
       },
     });
   }
-  // // ---> scr
-  // for (const [from, to, amount, blockNumber] of (await scr.history(SCRAddr, httpMainnetPRC))) {
-  //   // ...
-  // }
+
+  // ---> scr
+  const scrRecords = await scr.history(SCRAddr, httpMainnetPRC);
+  const updatedRecords = scr.getUpdatedScrRecords(scrRecords);
+  await scr.sendDataToSpp(seepassApi, updatedRecords);
 
   // listen new events
+  scr.subscribe(SCRAddr, httpMainnetPRC, async (scrEvent: scr.TransferEvent) => {
+    const updatedRecords = scr.getUpdatedScrRecords([scrEvent]);
+    await scr.sendDataToSpp(seepassApi, updatedRecords);
+  })
 
   // instance Express App
   const app = express();
@@ -52,8 +63,6 @@ async function main() {
   // sns apis
   app.get("/all", snsAll);
   app.get("/by_token_id/:tokenId", snsByTokenId);
-
-  // scr apis
 
   app.get("/", (req, res) => {
     res.send("Hello World!");
