@@ -4,6 +4,7 @@
     "module": "commonjs",
     "declaration": true,
     "rootDir": "./src",
+    "outDir": "./dist",
     "strict": true,
     "lib": ["esnext"],
     "moduleResolution": "node",
@@ -12,5 +13,8 @@
     "skipLibCheck": true,
     "sourceMap": false
   },
+  "include": [
+    "src/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }
