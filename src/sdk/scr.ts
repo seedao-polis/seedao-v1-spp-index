@@ -1,4 +1,8 @@
-import { ethers, WebSocketProvider, JsonRpcProvider, StructFragment } from "ethers";
+import {
+  ethers,
+  WebSocketProvider,
+  JsonRpcProvider,
+} from "ethers";
 import { SeepassAPI, UserChainData } from "./seepass_api";
 import { SCRAddr } from "../addr_and_rpc";
 
@@ -11,10 +15,10 @@ export namespace scr {
     from: string;
     to: string;
     amount: bigint;
-    blockNumber: number
-  };
+    blockNumber: number;
+  }
 
-  var userScrRecords: Record<string, bigint> = {};;
+  var userScrRecords: Record<string, bigint> = {};
 
   // history get all `Transfer` events start at `fromBlock`
   // `amount`'s decimals is `18`
@@ -22,9 +26,7 @@ export namespace scr {
     addr: string,
     httpRPC: string,
     fromBlock?: number,
-  ): Promise<
-    TransferEvent[]
-  > {
+  ): Promise<TransferEvent[]> {
     const contract = new ethers.Contract(
       addr,
       ABI,
@@ -47,7 +49,7 @@ export namespace scr {
         to: result[1],
         amount: result[2],
         blockNumber: event.blockNumber,
-      }
+      };
     });
   }
 
@@ -55,9 +57,7 @@ export namespace scr {
   export async function subscribe(
     addr: string,
     wsRPC: string,
-    callback: (
-      r: TransferEvent
-    ) => void,
+    callback: (r: TransferEvent) => void,
   ) {
     const contract = new ethers.Contract(
       addr,
@@ -79,10 +79,11 @@ export namespace scr {
     });
   }
 
-
   // Parse scr records collected by history or subscriber and filter out changed user data
   // The returned records will be used to generate seepass request to update user SCR amount in DB
-  export function getUpdatedScrRecords(records: TransferEvent[]): Record<string, bigint> {
+  export function getUpdatedScrRecords(
+    records: TransferEvent[],
+  ): Record<string, bigint> {
     var changedScrAccounts: Record<string, boolean> = {};
 
     for (const r of records) {
@@ -102,14 +103,18 @@ export namespace scr {
     }
 
     var updatedRecords = Object.fromEntries(
-      Object.entries(userScrRecords)
-        .filter((r) => { return changedScrAccounts[r[0]] })
+      Object.entries(userScrRecords).filter((r) => {
+        return changedScrAccounts[r[0]];
+      }),
     );
     return updatedRecords;
   }
 
   // Buid Spp data service API request and update user's scr data
-  export async function sendDataToSpp(seepassApi: SeepassAPI, updatedRecords: Record<string, bigint>) {
+  export async function sendDataToSpp(
+    seepassApi: SeepassAPI,
+    updatedRecords: Record<string, bigint>,
+  ) {
     const payload: UserChainData[] = Object.entries(updatedRecords).map((r) => {
       return {
         wallet: r[0],
@@ -121,7 +126,7 @@ export namespace scr {
         tokenUri: "",
         name: "SCR",
         symbol: "SCR",
-      }
+      };
     });
 
     await seepassApi.batchUpdateUserChainAssets(payload);

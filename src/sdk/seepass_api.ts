@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 export const chunkArrayEveryN = (arr: Array<any>, size: number) => {
   var chunks = [];
@@ -33,13 +33,15 @@ export class SeepassAPI {
   }
 
   // updateSocialAccounts send requests to update social accounts with given user wallet
-  async updateSocialAccounts() { }
+  async updateSocialAccounts() {}
 
   // batchUpdateUserChainAssets send multiple user chain asset records to API in one request
   async batchUpdateUserChainAssets(payload: UserChainData[]) {
     const apiEndpoint = `${this.base}/data_srv/batch_update_user_chain_record`;
     const chunkedRecords = chunkArrayEveryN(payload, MAX_BATCH_SIZE);
-    console.log(`batchUpdateUserChainAssets: chunk size: ${chunkedRecords.length}`);
+    console.log(
+      `batchUpdateUserChainAssets: chunk size: ${chunkedRecords.length}`,
+    );
     process.stdout.write("processing: ");
     try {
       for (let i = 0; i < chunkedRecords.length; i++) {

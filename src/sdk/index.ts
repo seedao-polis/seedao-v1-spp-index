@@ -1,2 +1,2 @@
-export * from "./sns"
-export * from "./scr"
+export * from "./sns";
+export * from "./scr";
