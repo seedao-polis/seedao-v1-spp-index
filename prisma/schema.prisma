@@ -15,7 +15,7 @@ model sns {
   tokenId String  @unique
   sns String @unique
   owner String
-  registeredDate Int
+  registeredDate BigInt
   length Int
   segmentLength Int
   characterSet String

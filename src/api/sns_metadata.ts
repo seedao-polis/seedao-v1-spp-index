@@ -6,7 +6,7 @@ export namespace snsMetadataAPI {
   export async function metadata(req: Request, resp: Response) {
     const tokenId: string = req.params.tokenId;
 
-    const client: PrismaClient = req.app.resource.client;
+    const client: PrismaClient = resp.locals.client;
     const sns = await client.sns.findUnique({ where: { tokenId: tokenId } });
 
     if (sns === null) {
@@ -39,7 +39,7 @@ export namespace snsMetadataAPI {
         {
           trait_type: "Registration Date",
           display_type: "date",
-          value: sns.registeredDate,
+          value: Number(sns.registeredDate),
         },
       ],
     };
@@ -51,7 +51,7 @@ export namespace snsMetadataAPI {
   export async function image(req: Request, resp: Response) {
     const tokenId: string = req.params.tokenId;
 
-    const client: PrismaClient = req.app.resource.client;
+    const client: PrismaClient = resp.locals.client;
     const sns = await client.sns.findUnique({ where: { tokenId: tokenId } });
 
     if (sns === null) {

@@ -9,6 +9,7 @@ import {
   SCRAddr,
   SNSAddr,
   wsMainnetPRC,
+  wsSepoliaRPC,
 } from "./addr_and_rpc";
 import { SeepassAPI } from "./sdk/seepass_api";
 import { snsMetadataAPI } from "./api/sns_metadata";
@@ -26,27 +27,33 @@ async function main() {
   // var changedScrAccounts: Record<string, boolean> = {};
 
   // handle history events
-  // ---> sns
+  // ---> sns TODO read latestBlockNumber from database
   for (const { name, owner } of await sns.history(SNSAddr, httpSepoliaRPC)) {
-    await client.sns.create({
-      data: {
-        tokenId: BigInt(keccak256(ethers.toUtf8Bytes(name))).toString(),
-        sns: name + ".seedao",
-        owner: owner,
-        registeredDate: Date.now(),
-        length: getCodePointLength(name),
-        segmentLength: getSegmentLength(name),
-        characterSet: findCharacterSet(name),
-      },
-    });
-  }
+    const tokenId = BigInt(keccak256(ethers.toUtf8Bytes(name))).toString();
 
+    // TODO refactor
+    const sns = await client.sns.findUnique({ where: { tokenId: tokenId } });
+    if (sns === null) {
+      await client.sns.create({
+        data: {
+          tokenId: tokenId,
+          sns: name + ".seedao",
+          owner: owner,
+          registeredDate: Date.now(),
+          length: getCodePointLength(name),
+          segmentLength: getSegmentLength(name),
+          characterSet: findCharacterSet(name),
+        },
+      });
+    }
+  }
   // ---> scr
   const scrRecords = await scr.history(SCRAddr, httpMainnetPRC);
   const updatedRecords = scr.getUpdatedScrRecords(scrRecords);
   await scr.sendDataToSpp(seepassApi, updatedRecords);
 
   // listen new events
+  // ---> scr
   await scr.subscribe(
     SCRAddr,
     wsMainnetPRC,
@@ -55,13 +62,38 @@ async function main() {
       await scr.sendDataToSpp(seepassApi, updatedRecords);
     },
   );
+  // ---> sns
+  await sns.subscribe(SNSAddr, wsSepoliaRPC, async (event) => {
+    const tokenId = BigInt(
+      keccak256(ethers.toUtf8Bytes(event.name)),
+    ).toString();
+
+    // TODO save latestBlockNumber to database
+
+    // TODO refactor
+    const sns = await client.sns.findUnique({ where: { tokenId: tokenId } });
+    if (sns === null) {
+      await client.sns.create({
+        data: {
+          tokenId: tokenId,
+          sns: event.name + ".seedao",
+          owner: event.owner,
+          registeredDate: Date.now(),
+          length: getCodePointLength(event.name),
+          segmentLength: getSegmentLength(event.name),
+          characterSet: findCharacterSet(event.name),
+        },
+      });
+    }
+  });
 
   // instance Express App
   const app = express();
 
   // middleware
   app.use((req: Request, resp: Response, next: NextFunction) => {
-    req.app.resource.client = client;
+    resp.locals.client = client;
+    next();
   });
 
   // sns apis
