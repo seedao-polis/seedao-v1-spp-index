@@ -1,19 +1,18 @@
 import { ethers, WebSocketProvider, JsonRpcProvider } from "ethers";
 
 export namespace sns {
-  const addr: string = "0x9B4941c54E2F9ABBD33be8C596277D5E11b62bA9";
   const ABI: string[] = ["event NameRegistered(string name, address owner)"];
 
   // history get all `NameRegistered` events start at `fromBlock`
   export async function history(
+    addr: string,
+    httpRPC: string,
     fromBlock?: number,
-  ): Promise<[name: string, owner: string][]> {
+  ): Promise<[name: string, owner: string, blockNumber: number][]> {
     const contract = new ethers.Contract(
       addr,
       ABI,
-      new JsonRpcProvider(
-        "https://eth-sepolia.g.alchemy.com/v2/H43zK7UnIN2v7u2ZoTbizIPnXkylKIZl",
-      ),
+      new JsonRpcProvider(httpRPC),
     );
 
     const filter = contract.filters.NameRegistered();
@@ -22,29 +21,30 @@ export namespace sns {
       const result = contract.interface.decodeEventLog(
         "NameRegistered",
         event.data,
+        event.topics,
       );
       console.log(
-        `History NameRegistered: ${result[0]} ${result[1]} ${event.blockNumber}`,
+        `History NameRegistered Event: ${result[0]} ${result[1]} ${event.blockNumber}`,
       );
-      return [result[0], result[1]]; // named type: [name: string, owner: string]
+      return [result[0], result[1], event.blockNumber]; // named type: [name: string, owner: string, blockNumber: number]
     });
   }
 
   // subscribe new `NameRegistered` events
   export async function subscribe(
+    addr: string,
+    wsRPC: string,
     callback: (name: string, owner: string, blockNumber: number) => void,
   ) {
     const contract = new ethers.Contract(
       addr,
       ABI,
-      new WebSocketProvider(
-        "wss://eth-sepolia.g.alchemy.com/v2/H43zK7UnIN2v7u2ZoTbizIPnXkylKIZl",
-      ),
+      new WebSocketProvider(wsRPC),
     );
 
     await contract.on("NameRegistered", (name, owner, event) => {
       console.log(
-        `New NameRegistered: ${name} ${owner} ${event.log.blockNumber}`,
+        `New NameRegistered Event: ${name} ${owner} ${event.log.blockNumber}`,
       );
       callback(name, owner, event.log.blockNumber);
     });
