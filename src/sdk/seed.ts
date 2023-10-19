@@ -1,4 +1,4 @@
-import { ethers, JsonRpcProvider, WebSocketProvider } from "ethers/lib.esm";
+import { ethers, JsonRpcProvider, WebSocketProvider } from "ethers";
 
 export namespace seed {
   const ABI: string[] = [
