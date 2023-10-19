@@ -3,12 +3,18 @@ import { ethers, WebSocketProvider, JsonRpcProvider } from "ethers";
 export namespace sns {
   const ABI: string[] = ["event NameRegistered(string name, address owner)"];
 
+  interface NameRegisteredEvent {
+    name: string;
+    owner: string;
+    blockNumber: number;
+  }
+
   // history get all `NameRegistered` events start at `fromBlock`
   export async function history(
     addr: string,
     httpRPC: string,
     fromBlock?: number,
-  ): Promise<[name: string, owner: string, blockNumber: number][]> {
+  ): Promise<NameRegisteredEvent[]> {
     const contract = new ethers.Contract(
       addr,
       ABI,
@@ -26,7 +32,11 @@ export namespace sns {
       console.log(
         `History NameRegistered Event: ${result[0]} ${result[1]} ${event.blockNumber}`,
       );
-      return [result[0], result[1], event.blockNumber]; // named type: [name: string, owner: string, blockNumber: number]
+      return {
+        name: result[0],
+        owner: result[1],
+        blockNumber: event.blockNumber,
+      };
     });
   }
 
@@ -34,7 +44,7 @@ export namespace sns {
   export async function subscribe(
     addr: string,
     wsRPC: string,
-    callback: (name: string, owner: string, blockNumber: number) => void,
+    callback: (event: NameRegisteredEvent) => void,
   ) {
     const contract = new ethers.Contract(
       addr,
@@ -46,7 +56,7 @@ export namespace sns {
       console.log(
         `New NameRegistered Event: ${name} ${owner} ${event.log.blockNumber}`,
       );
-      callback(name, owner, event.log.blockNumber);
+      callback({ name, owner, blockNumber: event.log.blockNumber });
     });
   }
 }

@@ -12,8 +12,11 @@ datasource db {
 
 model sns {
   id    Int     @id @default(autoincrement())
-  tokenId BigInt  @unique
+  tokenId String  @unique
   sns String @unique
   owner String
-  blockNumber Int
+  registeredDate Int
+  length Int
+  segmentLength Int
+  characterSet String
 }
