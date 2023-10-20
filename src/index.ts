@@ -1,4 +1,4 @@
-import { sns, scr } from "./sdk";
+import { sns } from "./sdk";
 import express, { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
 import { ethers } from "ethers";
@@ -6,7 +6,6 @@ import { snsAPI } from "./api/sns";
 import {
   httpMainnetPRC,
   httpSepoliaRPC,
-  SCRAddr,
   SNSAddr,
   wsMainnetPRC,
   wsSepoliaRPC,
@@ -23,8 +22,6 @@ async function main() {
   const seepassApi = new SeepassAPI(
     process.env.SEEPASS_BASE || "http://localhost:3000",
   );
-  // var scrRecords: Record<string, bigint> = {};
-  // var changedScrAccounts: Record<string, boolean> = {};
 
   // handle history events
   // ---> sns TODO read latestBlockNumber from database
@@ -49,21 +46,6 @@ async function main() {
       });
     }
   }
-  // ---> scr
-  const scrRecords = await scr.history(SCRAddr, httpMainnetPRC);
-  const updatedRecords = scr.getUpdatedScrRecords(scrRecords);
-  await scr.sendDataToSpp(seepassApi, updatedRecords);
-
-  // listen new events
-  // ---> scr
-  await scr.subscribe(
-    SCRAddr,
-    wsMainnetPRC,
-    async (scrEvent: scr.TransferEvent) => {
-      const updatedRecords = scr.getUpdatedScrRecords([scrEvent]);
-      await scr.sendDataToSpp(seepassApi, updatedRecords);
-    },
-  );
   // ---> sns
   await sns.subscribe(SNSAddr, wsSepoliaRPC, async (event) => {
     const tokenId = BigInt(
