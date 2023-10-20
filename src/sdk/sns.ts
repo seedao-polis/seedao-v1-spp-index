@@ -29,9 +29,9 @@ export namespace sns {
         event.data,
         event.topics,
       );
-      console.log(
-        `History NameRegistered Event: ${result[0]} ${result[1]} ${event.blockNumber}`,
-      );
+      // console.log(
+      //   `History NameRegistered Event: ${result[0]} ${result[1]} ${event.blockNumber}`,
+      // );
       return {
         name: result[0],
         owner: result[1],
@@ -53,9 +53,9 @@ export namespace sns {
     );
 
     await contract.on("NameRegistered", (name, owner, event) => {
-      console.log(
-        `New NameRegistered Event: ${name} ${owner} ${event.log.blockNumber}`,
-      );
+      // console.log(
+      //   `New NameRegistered Event: ${name} ${owner} ${event.log.blockNumber}`,
+      // );
       callback({ name, owner, blockNumber: event.log.blockNumber });
     });
   }

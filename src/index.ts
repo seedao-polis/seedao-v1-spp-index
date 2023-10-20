@@ -3,25 +3,13 @@ import express, { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
 import { ethers } from "ethers";
 import { snsAPI } from "./api/sns";
-import {
-  httpMainnetPRC,
-  httpSepoliaRPC,
-  SNSAddr,
-  wsMainnetPRC,
-  wsSepoliaRPC,
-} from "./addr_and_rpc";
-import { SeepassAPI } from "./sdk/seepass_api";
+import { httpSepoliaRPC, SNSAddr, wsSepoliaRPC } from "./addr_and_rpc";
 import { snsMetadataAPI } from "./api/sns_metadata";
 import { findCharacterSet, getCodePointLength, getSegmentLength } from "./util";
 
 async function main() {
   // init database
   const client = new PrismaClient();
-
-  // Init SeePASS API
-  const seepassApi = new SeepassAPI(
-    process.env.SEEPASS_BASE || "http://localhost:3000",
-  );
 
   // handle history events
   // ---> sns TODO read latestBlockNumber from database
