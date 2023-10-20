@@ -15,3 +15,5 @@ export const httpSepoliaRPC =
   "https://eth-sepolia.g.alchemy.com/v2/H43zK7UnIN2v7u2ZoTbizIPnXkylKIZl";
 export const wsSepoliaRPC =
   "wss://eth-sepolia.g.alchemy.com/v2/H43zK7UnIN2v7u2ZoTbizIPnXkylKIZl";
+
+export const HOST = "https://test-spp-indexer.seedao.tech/";

@@ -1,8 +1,4 @@
-import {
-  ethers,
-  WebSocketProvider,
-  JsonRpcProvider,
-} from "ethers";
+import { ethers, WebSocketProvider, JsonRpcProvider } from "ethers";
 import { SeepassAPI, UserChainData } from "./seepass_api";
 import { SCRAddr } from "../addr_and_rpc";
 

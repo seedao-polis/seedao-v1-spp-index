@@ -1,7 +1,7 @@
 import { sns, scr } from "./sdk";
 import express, { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
-import { ethers, keccak256 } from "ethers";
+import { ethers } from "ethers";
 import { snsAPI } from "./api/sns";
 import {
   httpMainnetPRC,
@@ -29,7 +29,9 @@ async function main() {
   // handle history events
   // ---> sns TODO read latestBlockNumber from database
   for (const { name, owner } of await sns.history(SNSAddr, httpSepoliaRPC)) {
-    const tokenId = BigInt(keccak256(ethers.toUtf8Bytes(name))).toString();
+    const tokenId = BigInt(
+      ethers.keccak256(ethers.toUtf8Bytes(name)),
+    ).toString();
 
     // TODO refactor
     const sns = await client.sns.findUnique({ where: { tokenId: tokenId } });
@@ -65,7 +67,7 @@ async function main() {
   // ---> sns
   await sns.subscribe(SNSAddr, wsSepoliaRPC, async (event) => {
     const tokenId = BigInt(
-      keccak256(ethers.toUtf8Bytes(event.name)),
+      ethers.keccak256(ethers.toUtf8Bytes(event.name)),
     ).toString();
 
     // TODO save latestBlockNumber to database
