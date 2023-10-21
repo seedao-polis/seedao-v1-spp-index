@@ -15,7 +15,7 @@ export namespace snsMetadataAPI {
       return;
     }
 
-    const image = HOST + tokenId + "/image";
+    const image = HOST + "metadata/" + tokenId + "/image";
     const metadata = {
       name: sns.sns,
       description: sns.sns + ", an SNS name.",
