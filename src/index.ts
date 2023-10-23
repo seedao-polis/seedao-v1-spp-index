@@ -8,6 +8,9 @@ import { snsMetadataAPI } from "./api/sns_metadata";
 import { findCharacterSet, getCodePointLength, getSegmentLength } from "./util";
 
 async function main() {
+  // @ts-ignore
+  BigInt.prototype.toJSON = function() { return this.toString() }
+
   // init database
   const client = new PrismaClient();
 
@@ -69,8 +72,9 @@ async function main() {
   });
 
   // sns apis
-  app.get("/all", snsAPI.all);
-  app.get("/by_token_id/:tokenId", snsAPI.byTokenId);
+  app.get("/sns/all", snsAPI.all);
+  app.get("/sns/by_token_id/:tokenId", snsAPI.byTokenId);
+  app.get("/sns/by_name", snsAPI.byName);
 
   app.get("/", (req, res) => {
     res.send("Hello World!");
@@ -81,7 +85,7 @@ async function main() {
   app.get("/metadata/:tokenId/image", snsMetadataAPI.image);
 
   app.listen(3000, () => {
-    console.log("Server is running on http://localhost:3003");
+    console.log("Server is running on http://localhost:3000");
   });
 }
 

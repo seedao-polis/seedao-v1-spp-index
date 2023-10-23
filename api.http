@@ -1,0 +1,21 @@
+###
+GET {{host}}/sns/all
+Accept: application/json
+
+###
+GET {{host}}/sns/by_name?name=xs.seedao
+Accept: application/json
+
+###
+GET {{host}}/sns/by_token_id/52618670193487758334465238312469779714454369700427486871644742693757694306846
+Accept: application/json
+
+### ----- ----- ----- ----- ----- ----- ----- -----
+
+###
+GET {{host}}/metadata/52618670193487758334465238312469779714454369700427486871644742693757694306846
+Accept: application/json
+
+###
+GET {{host}}/metadata/52618670193487758334465238312469779714454369700427486871644742693757694306846/image
+Accept: application/json
