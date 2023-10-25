@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { HOST } from "../addr_and_rpc";
+// @ts-ignore
+import conf from "../../conf.json";
 
 export namespace snsMetadataAPI {
   // `/metadata/:tokenId`
@@ -15,7 +16,7 @@ export namespace snsMetadataAPI {
       return;
     }
 
-    const image = HOST + "metadata/" + tokenId + "/image";
+    const image = conf.metadata_host + "metadata/" + tokenId + "/image";
     const metadata = {
       name: sns.sns,
       description: sns.sns + ", an SNS name.",
