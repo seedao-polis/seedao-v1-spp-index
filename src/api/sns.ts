@@ -10,13 +10,6 @@ export namespace snsAPI {
 
   // `/sns/by_name?name=abc.seedao`
   export async function byName(req: Request, resp: Response) {
-    /*
-     #swagger.tags = ['SNS']
-     #swagger.summary = 'Get SNS by name'
-     #swagger.path = '/sns/by_name'
-     #swagger.method = 'get'
-     #swagger.parameters['name'] = { in: query, type: 'string', description: 'SNS name' }
-     */
     const name: string = req.query.name as string;
 
     const client: PrismaClient = resp.locals.client;

@@ -20,7 +20,13 @@ export async function sendWebhook(params: any, webhooks: string[]) {
           },
         },
       );
-      console.log("resp ==>", resp.status, " : ", resp.statusText);
+      console.log(
+        "webhook: '" + url,
+        "' ==> [",
+        resp.status,
+        ":",
+        resp.statusText + "]",
+      );
     } catch (e) {
       console.error(e);
     }

@@ -7,7 +7,11 @@ export interface Contract {
   abi: string[];
   chainRPC: string;
   events: string[];
-  callbacks: ((args: any[][], blockNumber: number) => Promise<void>)[];
+  callbacks: ((
+    args: any[][],
+    blockNumber: number,
+    tx: string,
+  ) => Promise<void>)[];
 }
 
 export async function queryHistoryEvents(contract: Contract) {
@@ -50,8 +54,14 @@ export async function queryHistoryEvents(contract: Contract) {
       // );
       return result.toArray();
     });
-    console.log(`----- execute ${contract.name}'s callback[${i}] -----`);
-    await contract.callbacks[i](args, events[events.length - 1].blockNumber);
+    console.log(
+      `----- execute [HISTORY] ${contract.name}'s callback[${i}] -----`,
+    );
+    await contract.callbacks[i](
+      args,
+      events[events.length - 1].blockNumber,
+      events[events.length - 1].transactionHash,
+    );
   }
 }
 
@@ -81,10 +91,11 @@ export async function subscribeNewEvents(contract: Contract) {
       // console.log(
       //   `${contract.name}'s New ${contract.events[i]} Event: ${args}`,
       // );
-      console.log(`----- execute ${contract.name}'s callback[${i}] -----`);
+      console.log(`----- execute [NEW] ${contract.name}'s callback[${i}] -----`);
       await contract.callbacks[i](
         [args.slice(0, args.length - 1)],
         args[args.length - 1].log.blockNumber,
+        args[args.length - 1].log.transactionHash,
       );
     });
   }
