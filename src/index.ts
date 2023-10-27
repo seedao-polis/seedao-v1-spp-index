@@ -6,6 +6,20 @@ import { Contract, queryHistoryEvents, subscribeNewEvents } from "./events";
 // @ts-ignore
 import conf from "../conf.json";
 import { sendWebhook } from "./webhook";
+import { erc20TestTransferTxService } from "./api/service/erc20_test";
+import { scrTransferTxService } from "./api/service/scr";
+import { seedTransferTxService } from "./api/service/seed";
+import {
+  snsNameregisteredTxService,
+  snsService,
+  snsTransferTxService,
+} from "./api/service/sns";
+import { ethers } from "ethers";
+import {
+  findCharacterSet,
+  getCodePointLength,
+  getSegmentLength,
+} from "./helper/sns_attr";
 
 async function main() {
   // @ts-ignore
@@ -16,12 +30,24 @@ async function main() {
   // init database
   const client = new PrismaClient();
 
-  //
+  // read latestBlockNumber from database
+  const erc20TestTransferTxLatestBlockNumber: number =
+    await erc20TestTransferTxService.getLatestBlockNumber(client);
+  const scrTransferTxLatestBlockNumber: number =
+    await scrTransferTxService.getLatestBlockNumber(client);
+  const seedTransferTxLatestBlockNumber: number =
+    await seedTransferTxService.getLatestBlockNumber(client);
+  const snsNameregisteredTxLatestBlockNumber: number =
+    await snsNameregisteredTxService.getLatestBlockNumber(client);
+  const snsTransferTxLatestBlockNumber: number =
+    await snsTransferTxService.getLatestBlockNumber(client);
+
+  // prepare target contracts
   const contracts: Contract[] = [
     {
       name: "MMERC20",
       addr: conf.contracts.mmerc20.addr,
-      fromBlock: 0,
+      fromBlock: erc20TestTransferTxLatestBlockNumber,
       abi: [
         "event Transfer(address indexed from, address indexed to, uint256 value)",
         "event Paused(address account)",
@@ -30,47 +56,69 @@ async function main() {
       chainRPC: conf.contracts.mmerc20.chainRPC,
       events: ["Transfer", "Paused", "Unpaused"],
       callbacks: [
-        async (args, blockNumber) => {
+        async (args, blockNumber, tx) => {
           // [[from, to, value], , ]
 
-          // save to database
+          const unHandleEvents: { from: string; to: string; value: bigint }[] =
+            [];
+
           for (const arg of args) {
             console.log(
-              `[Transfer] Event: ${arg[0]} ${arg[1]} ${arg[2]} ${blockNumber}`,
+              `[Transfer] Event: ${arg[0]} ${arg[1]} ${arg[2]} ${blockNumber} ${tx}`,
             );
-          }
 
-          // send webhook
-          const params: { from: string; to: string; value: number }[] =
-            args.map((arg) => {
-              return {
+            const transferTx = await erc20TestTransferTxService.getByTx(
+              client,
+              tx,
+            );
+            if (transferTx == null) {
+              // save data
+
+              // save tx
+              await erc20TestTransferTxService.create(client, {
+                id: 0,
+                tx: tx,
+                blockNumber: blockNumber,
+                paramFrom: arg[0],
+                paramTo: arg[1],
+                paramValue: arg[2],
+              });
+
+              // add to unHandleEvents
+              unHandleEvents.push({
                 from: arg[0],
                 to: arg[1],
                 value: arg[2],
-              };
-            });
-          await sendWebhook(
-            {
-              contract: "MMERC20",
-              event: "Transfer",
-              params,
-              blockNumber,
-            },
-            conf.contracts.mmerc20.webhooks.Transfer,
-          );
-        },
-        async (args, blockNumber) => {
-          // [[account], , ]
+              });
+            }
+          }
 
-          for (const arg of args) {
-            console.log(`[Paused] Event: ${arg[0]} ${blockNumber}`);
+          // send webhook
+          if (unHandleEvents.length != 0) {
+            await sendWebhook(
+              {
+                contract: "MMERC20",
+                event: "Transfer",
+                data: unHandleEvents,
+                blockNumber,
+                tx,
+              },
+              conf.contracts.mmerc20.webhooks.Transfer,
+            );
           }
         },
-        async (args, blockNumber) => {
+        async (args, blockNumber, tx) => {
           // [[account], , ]
 
           for (const arg of args) {
-            console.log(`[Unpaused] Event: ${arg[0]} ${blockNumber}`);
+            console.log(`[Paused] Event: ${arg[0]} ${blockNumber} ${tx}`);
+          }
+        },
+        async (args, blockNumber, tx) => {
+          // [[account], , ]
+
+          for (const arg of args) {
+            console.log(`[Unpaused] Event: ${arg[0]} ${blockNumber} ${tx}`);
           }
         },
       ],
@@ -78,158 +126,263 @@ async function main() {
     {
       name: "SCR",
       addr: conf.contracts.scr.addr,
-      fromBlock: 17998600,
+      fromBlock: scrTransferTxLatestBlockNumber,
       abi: [
         "event Transfer(address indexed from, address indexed to, uint256 value)",
       ],
       chainRPC: conf.contracts.scr.chainRPC,
       events: ["Transfer"],
       callbacks: [
-        async (args, blockNumber) => {
+        async (args, blockNumber, tx) => {
           // [[from, to, value], , ]
 
-          // save to database
+          const unHandleEvents: { from: string; to: string; value: bigint }[] =
+            [];
+
           for (const arg of args) {
             console.log(
-              `[Transfer] Event: ${arg[0]} ${arg[1]} ${arg[2]} ${blockNumber}`,
+              `[Transfer] Event: ${arg[0]} ${arg[1]} ${arg[2]} ${blockNumber} ${tx}`,
             );
-          }
 
-          // send webhook
-          const params: { from: string; to: string; value: number }[] =
-            args.map((arg) => {
-              return {
+            const transferTx = await scrTransferTxService.getByTx(client, tx);
+            if (transferTx == null) {
+              // save tx
+              await scrTransferTxService.create(client, {
+                id: 0,
+                tx: tx,
+                blockNumber: blockNumber,
+                paramFrom: arg[0],
+                paramTo: arg[1],
+                paramValue: arg[2],
+              });
+
+              // save data TODO
+
+              // add to unHandleEvents
+              unHandleEvents.push({
                 from: arg[0],
                 to: arg[1],
                 value: arg[2],
-              };
-            });
-          await sendWebhook(
-            {
-              contract: "SCR",
-              event: "Transfer",
-              params,
-              blockNumber,
-            },
-            conf.contracts.scr.webhooks.Transfer,
-          );
+              });
+            }
+          }
+
+          // send webhook
+          if (unHandleEvents.length != 0) {
+            await sendWebhook(
+              {
+                contract: "SCR",
+                event: "Transfer",
+                data: unHandleEvents,
+                blockNumber,
+                tx,
+              },
+              conf.contracts.scr.webhooks.Transfer,
+            );
+          }
         },
       ],
     },
     {
       name: "SEED",
       addr: conf.contracts.seed.addr,
-      fromBlock: 18360511,
+      fromBlock: seedTransferTxLatestBlockNumber,
       abi: [
         "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
       ],
       chainRPC: conf.contracts.seed.chainRPC,
       events: ["Transfer"],
       callbacks: [
-        async (args, blockNumber) => {
+        async (args, blockNumber, tx) => {
           // [[from, to, tokenId], , ]
 
-          // save to database
+          const unHandleEvents: {
+            from: string;
+            to: string;
+            tokenId: string;
+          }[] = [];
           for (const arg of args) {
             console.log(
-              `[Transfer] Event: ${arg[0]} ${arg[1]} ${arg[2]} ${blockNumber}`,
+              `[Transfer] Event: ${arg[0]} ${arg[1]} ${arg[2]} ${blockNumber} ${tx}`,
             );
-          }
 
-          // send webhook
-          const params: { from: string; to: string; tokenId: number }[] =
-            args.map((arg) => {
-              return {
+            const transferTx = await seedTransferTxService.getByTx(client, tx);
+            if (transferTx == null) {
+              // save data TODO
+
+              // save tx
+              await seedTransferTxService.create(client, {
+                id: 0,
+                tx: tx,
+                blockNumber: blockNumber,
+                paramFrom: arg[0],
+                paramTo: arg[1],
+                paramTokenId: arg[2],
+              });
+
+              // add to unHandleEvents
+              unHandleEvents.push({
                 from: arg[0],
                 to: arg[1],
                 tokenId: arg[2],
-              };
-            });
-          await sendWebhook(
-            {
-              contract: "SEED",
-              event: "Transfer",
-              params,
-              blockNumber,
-            },
-            conf.contracts.seed.webhooks.Transfer,
-          );
+              });
+            }
+          }
+
+          // send webhook
+          if (unHandleEvents.length != 0) {
+            await sendWebhook(
+              {
+                contract: "SEED",
+                event: "Transfer",
+                data: unHandleEvents,
+                blockNumber,
+                tx,
+              },
+              conf.contracts.seed.webhooks.Transfer,
+            );
+          }
         },
       ],
     },
     {
       name: "SNS_SeeDAORegistrarController",
-      addr: conf.contracts.snsSeeDAORegistrarController.addr, // SeeDAORegistrarController's address
-      fromBlock: 4526514,
+      addr: conf.contracts.sns.snsSeeDAORegistrarController.addr, // SeeDAORegistrarController's address
+      fromBlock: snsNameregisteredTxLatestBlockNumber,
       abi: ["event NameRegistered(string name, address owner)"],
-      chainRPC: conf.contracts.snsSeeDAORegistrarController.chainRPC,
+      chainRPC: conf.contracts.sns.snsSeeDAORegistrarController.chainRPC,
       events: ["NameRegistered"],
       callbacks: [
-        async (args, blockNumber) => {
+        async (args, blockNumber, tx) => {
           // [[name, owner], , ]
 
-          // save to database
+          const unHandleEvents: { from: string; to: string; sns: string }[] =
+            [];
+
           for (const arg of args) {
             console.log(
-              `[NameRegistered] Event: ${arg[0]} ${arg[1]} ${blockNumber}`,
+              `[NameRegistered] Event: ${arg[0]} ${arg[1]} ${blockNumber} ${tx}`,
             );
 
-            //   const tokenId = BigInt(
-            //     ethers.keccak256(ethers.toUtf8Bytes(arg[0])),
-            //   ).toString();
-            //
-            //   // TODO save latestBlockNumber to database
-            //
-            //   const sns = await client.sns.findUnique({ where: { tokenId: tokenId } });
-            //   if (sns === null) {
-            //     await client.sns.create({
-            //       data: {
-            //         tokenId: tokenId,
-            //         sns: arg[0] + ".seedao",
-            //         owner: arg[1],
-            //         registeredDate: Date.now(),
-            //         length: getCodePointLength(arg[0]),
-            //         segmentLength: getSegmentLength(arg[0]),
-            //         characterSet: findCharacterSet(arg[0]),
-            //       },
-            //     });
-            //   }
+            // save tx
+            await snsNameregisteredTxService.create(client, {
+              id: 0,
+              tx: tx,
+              blockNumber: blockNumber,
+              paramName: arg[0],
+              paramOwner: arg[1],
+            });
+
+            // save data
+            const tokenId = BigInt(
+              ethers.keccak256(ethers.toUtf8Bytes(arg[0])),
+            ).toString();
+            await snsService.create(client, {
+              id: 0,
+              tokenId: tokenId,
+              sns: arg[0] + ".seedao",
+              owner: arg[1],
+              registeredDate: BigInt(Date.now()),
+              length: getCodePointLength(arg[0]),
+              segmentLength: getSegmentLength(arg[0]),
+              characterSet: findCharacterSet(arg[0]),
+            });
+
+            // add to unHandleEvents
+            unHandleEvents.push({
+              from: ethers.ZeroAddress,
+              to: arg[1],
+              sns: arg[0] + ".seedao",
+            });
           }
 
           // send webhook
-          const params: { name: string; owner: string }[] = args.map((arg) => {
-            return {
-              name: arg[0],
-              owner: arg[1],
-            };
-          });
-          await sendWebhook(
-            {
-              contract: "SNS",
-              event: "NameRegistered",
-              params,
-              blockNumber,
-            },
-            conf.contracts.snsSeeDAORegistrarController.webhooks.NameRegistered,
-          );
+          if (unHandleEvents.length != 0) {
+            await sendWebhook(
+              {
+                contract: "SNS",
+                event: "Transfer", // NOTICE HERE!
+                data: unHandleEvents,
+                blockNumber,
+                tx,
+              },
+              conf.contracts.sns.webhooks.Transfer,
+            );
+          }
         },
       ],
     },
     {
       name: "SNS_BaseRegistrar",
-      addr: conf.contracts.snsBaseRegistrar.addr, // BaseRegistrar's address
-      fromBlock: 0,
+      addr: conf.contracts.sns.snsBaseRegistrar.addr, // BaseRegistrar's address
+      fromBlock: snsTransferTxLatestBlockNumber,
       abi: [
         "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
       ],
-      chainRPC: conf.contracts.snsBaseRegistrar.chainRPC,
+      chainRPC: conf.contracts.sns.snsBaseRegistrar.chainRPC,
       events: ["Transfer"],
-      callbacks: [], // [async (args, blockNumber) => {}], // TODO implements this function
+      callbacks: [
+        async (args, blockNumber, tx) => {
+          // [[from, to, tokenId], , ]
+
+          const unHandleEvents: { from: string; to: string; sns: string }[] =
+            [];
+
+          for (const arg of args) {
+            console.log(
+              `[Transfer] Event: ${arg[0]} ${arg[1]} ${arg[2]} ${blockNumber} ${tx}`,
+            );
+
+            // save tx
+            await snsTransferTxService.create(client, {
+              id: 0,
+              tx: tx,
+              blockNumber: blockNumber,
+              paramFrom: arg[0],
+              paramTo: arg[1],
+              paramTokenId: arg[2],
+            });
+
+            // save data
+            const sns = await snsService.getByTokenId(client, arg[2]);
+            if (sns == null) {
+              return;
+            }
+            // Don't handle the event of minting
+            if (arg[0] !== ethers.ZeroAddress) {
+              await snsService.updateOwnerByTokenId(client, arg[2], arg[1]);
+            }
+
+            // add to unHandleEvents
+            unHandleEvents.push({
+              from: arg[0],
+              to: arg[1],
+              sns: sns.sns,
+            });
+          }
+
+          // send webhook
+          // SeeDAORegistrarController's 'NameRegistered' Event and BaseRegistrar's 'Transfer' Event send to the same webhook
+          if (unHandleEvents.length != 0) {
+            await sendWebhook(
+              {
+                contract: "SNS",
+                event: "Transfer", // NOTICE HERE!
+                data: unHandleEvents,
+                blockNumber,
+                tx,
+              },
+              conf.contracts.sns.webhooks.Transfer,
+            );
+          }
+        },
+      ],
     },
   ];
+  // subscribe events first, and then query history events
   for (const contract of contracts) {
-    await queryHistoryEvents(contract); // TODO read fromBlock from database
     await subscribeNewEvents(contract);
+    await queryHistoryEvents(contract);
   }
 
   // instance Express App

@@ -10,6 +10,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// NOT USED
+model erc20Test {
+  id    Int     @id @default(autoincrement())
+  owner String
+  amount BigInt
+}
+
+model erc20TestTransferTx {
+  id    Int     @id @default(autoincrement())
+  tx String @unique
+  blockNumber Int
+  paramFrom String
+  paramTo String
+  paramValue BigInt
+}
+
+// NOT USED
+model scr {
+  id    Int     @id @default(autoincrement())
+  owner String
+  amount BigInt
+}
+
+model scrTransferTx {
+  id    Int     @id @default(autoincrement())
+  tx String @unique
+  blockNumber Int
+  paramFrom String
+  paramTo String
+  paramValue BigInt
+}
+
+// NOT USED
+model seed {
+  id    Int     @id @default(autoincrement())
+  owner String
+  tokenId String  @unique
+}
+
+model seedTransferTx {
+  id    Int     @id @default(autoincrement())
+  tx String @unique
+  blockNumber Int
+  paramFrom String
+  paramTo String
+  paramTokenId String
+}
+
 model sns {
   id    Int     @id @default(autoincrement())
   tokenId String  @unique
@@ -19,4 +67,21 @@ model sns {
   length Int
   segmentLength Int
   characterSet String
+}
+
+model snsNameregisteredTx {
+  id    Int     @id @default(autoincrement())
+  tx String @unique
+  blockNumber Int
+  paramName String
+  paramOwner String
+}
+
+model snsTransferTx {
+  id    Int     @id @default(autoincrement())
+  tx String @unique
+  blockNumber Int
+  paramFrom String
+  paramTo String
+  paramTokenId String
 }
