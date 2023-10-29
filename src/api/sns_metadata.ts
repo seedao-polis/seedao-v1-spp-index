@@ -9,7 +9,7 @@ export namespace snsMetadataAPI {
     const tokenId: string = req.params.tokenId;
 
     const client: PrismaClient = resp.locals.client;
-    const sns = await client.sns.findUnique({ where: { tokenId: tokenId } });
+    const sns = await client.sNS.findUnique({ where: { tokenId: tokenId } });
 
     if (sns === null) {
       resp.status(404).json({ error: "SNS Not Found" });
@@ -54,7 +54,7 @@ export namespace snsMetadataAPI {
     const tokenId: string = req.params.tokenId;
 
     const client: PrismaClient = resp.locals.client;
-    const sns = await client.sns.findUnique({ where: { tokenId: tokenId } });
+    const sns = await client.sNS.findUnique({ where: { tokenId: tokenId } });
 
     if (sns === null) {
       resp.status(404).json({ error: "SNS Not Found" });

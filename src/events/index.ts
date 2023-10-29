@@ -6,12 +6,12 @@ export interface Contract {
   fromBlock: number;
   abi: string[];
   chainRPC: string;
-  events: string[];
+  events: string[]; // want to listen events
   callbacks: ((
     args: any[][],
     blockNumber: number,
     tx: string,
-  ) => Promise<void>)[];
+  ) => Promise<void>)[]; // callbacks for wanting to listen events
 }
 
 export async function queryHistoryEvents(contract: Contract) {
@@ -91,7 +91,9 @@ export async function subscribeNewEvents(contract: Contract) {
       // console.log(
       //   `${contract.name}'s New ${contract.events[i]} Event: ${args}`,
       // );
-      console.log(`----- execute [NEW] ${contract.name}'s callback[${i}] -----`);
+      console.log(
+        `----- execute [NEW] ${contract.name}'s callback[${i}] -----`,
+      );
       await contract.callbacks[i](
         [args.slice(0, args.length - 1)],
         args[args.length - 1].log.blockNumber,

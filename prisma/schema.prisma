@@ -10,15 +10,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// NOT USED
-model erc20Test {
+model ERC20Token {
   id    Int     @id @default(autoincrement())
+  contractAddress String
   owner String
   amount BigInt
 }
 
-model erc20TestTransferTx {
+model ERC20TokenTransferTx {
   id    Int     @id @default(autoincrement())
+  contractAddress String
   tx String @unique
   blockNumber Int
   paramFrom String
@@ -26,31 +27,16 @@ model erc20TestTransferTx {
   paramValue BigInt
 }
 
-// NOT USED
-model scr {
+model ERC721Token {
   id    Int     @id @default(autoincrement())
-  owner String
-  amount BigInt
-}
-
-model scrTransferTx {
-  id    Int     @id @default(autoincrement())
-  tx String @unique
-  blockNumber Int
-  paramFrom String
-  paramTo String
-  paramValue BigInt
-}
-
-// NOT USED
-model seed {
-  id    Int     @id @default(autoincrement())
+  contractAddress String
   owner String
   tokenId String  @unique
 }
 
-model seedTransferTx {
+model ERC721TokenTransferTx {
   id    Int     @id @default(autoincrement())
+  contractAddress String
   tx String @unique
   blockNumber Int
   paramFrom String
@@ -58,7 +44,29 @@ model seedTransferTx {
   paramTokenId String
 }
 
-model sns {
+model ERC1155Token {
+  id    Int     @id @default(autoincrement())
+  contractAddress String
+  owner String
+  tokenId String  @unique
+  tokenValue BigInt
+}
+
+model ERC1155TokenTransferTx {
+  id    Int     @id @default(autoincrement())
+  contractAddress String
+  tx String @unique
+  blockNumber Int
+  paramOperator String
+  paramFrom String
+  paramTo String
+  paramIds String
+  paramValues String
+}
+
+// --------------------------------------
+
+model SNS {
   id    Int     @id @default(autoincrement())
   tokenId String  @unique
   sns String @unique
@@ -69,7 +77,7 @@ model sns {
   characterSet String
 }
 
-model snsNameregisteredTx {
+model SNSNameregisteredTx {
   id    Int     @id @default(autoincrement())
   tx String @unique
   blockNumber Int
@@ -77,11 +85,4 @@ model snsNameregisteredTx {
   paramOwner String
 }
 
-model snsTransferTx {
-  id    Int     @id @default(autoincrement())
-  tx String @unique
-  blockNumber Int
-  paramFrom String
-  paramTo String
-  paramTokenId String
-}
+// SNSTransferTx saved at 'ERC721TokenTransferTx' table

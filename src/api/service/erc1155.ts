@@ -1,0 +1,48 @@
+import { PrismaClient } from ".prisma/client";
+import { ERC1155Token, ERC1155TokenTransferTx } from "@prisma/client";
+
+export namespace ERC1155TokenService {
+  export async function create(
+    client: PrismaClient,
+    data: ERC1155Token,
+  ): Promise<ERC1155Token> {
+    return client.eRC1155Token.create({
+      data: data,
+    });
+  }
+}
+
+export namespace ERC1155TokenTransferTxService {
+  export async function create(
+    client: PrismaClient,
+    data: ERC1155TokenTransferTx,
+  ): Promise<ERC1155TokenTransferTx> {
+    return client.eRC1155TokenTransferTx.create({
+      data: data,
+    });
+  }
+
+  export async function getLatestBlockNumber(
+    client: PrismaClient,
+    contractAddress: string,
+  ): Promise<number> {
+    const result = await client.eRC1155TokenTransferTx.findFirst({
+      where: { contractAddress: contractAddress },
+      orderBy: { blockNumber: "desc" },
+    });
+    if (result == null) {
+      return 0;
+    }
+    return result.blockNumber;
+  }
+
+  export async function getByContractAndTx(
+    client: PrismaClient,
+    contractAddress: string,
+    tx: string,
+  ): Promise<ERC1155TokenTransferTx | null> {
+    return client.eRC1155TokenTransferTx.findUnique({
+      where: { contractAddress: contractAddress, tx: tx },
+    });
+  }
+}
