@@ -11,6 +11,13 @@ export namespace SNSService {
     });
   }
 
+  export async function deleteByTokenId(
+    client: PrismaClient,
+    tokenId: bigint,
+  ): Promise<void> {
+    client.sNS.delete({ where: { tokenId: tokenId } });
+  }
+
   export async function updateOwnerByTokenId(
     client: PrismaClient,
     tokenId: bigint,

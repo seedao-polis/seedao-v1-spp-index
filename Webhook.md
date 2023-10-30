@@ -12,12 +12,16 @@
   "contractName": "SCR",
   "contractAddress": "0xc74DEE15a4700D5df797bDD3982EE649A3Bb8c6C",
   "event": "Transfer",
-  "blockNumber": 17998600,
   "data": [
     {
-      "from": "0x0000000000000000000000000000000000000000",
-      "to": "0x78f625A65Fc316D32d98d249b698fb509A6d98f2",
-      "value": "949436"
+      "metadata": {
+        
+      },
+      "parameters": {
+        "from": "0x0000000000000000000000000000000000000000",
+        "to": "0x78f625A65Fc316D32d98d249b698fb509A6d98f2",
+        "value": "949436"
+      }
     },
     {
       "from": "0x0000000000000000000000000000000000000000",
@@ -77,7 +81,6 @@
   "contractName": "NODE",
   "contractAddress": "0x9d34D407D8586478b3e4c39BE633ED3D7be1c80c",
   "event": "Transfer",
-  "blockNumber": 18360511,
   "data": [
     {
       "operator": "0x82944b68bB92fA11764041AA61204b5fdC85F429",

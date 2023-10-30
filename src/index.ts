@@ -119,6 +119,14 @@ async function main() {
                     owner: to,
                     amount: value,
                   });
+                } else if (to === ethers.ZeroAddress) {
+                  // `decrementAmount` for `from` address
+                  await ERC20TokenService.decrementAmount(
+                    client,
+                    c.addr,
+                    from,
+                    value,
+                  );
                 } else {
                   // `decrementAmount` for `from` address
                   await ERC20TokenService.decrementAmount(
@@ -236,8 +244,14 @@ async function main() {
                     owner: to,
                     tokenId: tokenId,
                   });
+                } else if (to === ethers.ZeroAddress) {
+                  await ERC721TokenService.deleteByContractAndTokenId(
+                    client,
+                    c.addr,
+                    tokenId,
+                  );
                 } else {
-                  await ERC721TokenService.updateOwnerByTokenId(
+                  await ERC721TokenService.updateOwnerByContractAndTokenId(
                     client,
                     c.addr,
                     tokenId,
@@ -361,6 +375,15 @@ async function main() {
                     tokenId: id,
                     tokenValue: value,
                   });
+                } else if (to === ethers.ZeroAddress) {
+                  // `decrementValueByTokenId` for `from` address
+                  await ERC1155TokenService.decrementValueByTokenId(
+                    client,
+                    c.addr,
+                    id,
+                    from,
+                    value,
+                  );
                 } else {
                   // `decrementValueByTokenId` for `from` address
                   await ERC1155TokenService.decrementValueByTokenId(
@@ -467,6 +490,17 @@ async function main() {
                       tokenId: ids[i],
                       tokenValue: values[i],
                     });
+                  }
+                } else if (to === ethers.ZeroAddress) {
+                  for (let i = 0; i < ids.length; i++) {
+                    // `decrementValueByTokenId` for `from` address
+                    await ERC1155TokenService.decrementValueByTokenId(
+                      client,
+                      c.addr,
+                      ids[i],
+                      from,
+                      values[i],
+                    );
                   }
                 } else {
                   for (let i = 0; i < ids.length; i++) {
@@ -681,7 +715,11 @@ async function main() {
               }
               // Don't handle the event of minting
               if (from !== ethers.ZeroAddress) {
-                await SNSService.updateOwnerByTokenId(client, tokenId, to);
+                if (to === ethers.ZeroAddress) {
+                  await SNSService.deleteByTokenId(client, tokenId);
+                } else {
+                  await SNSService.updateOwnerByTokenId(client, tokenId, to);
+                }
               }
 
               // add to unHandleEvents

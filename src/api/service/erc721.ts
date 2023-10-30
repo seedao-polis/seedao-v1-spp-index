@@ -11,7 +11,17 @@ export namespace ERC721TokenService {
     });
   }
 
-  export async function updateOwnerByTokenId(
+  export async function deleteByContractAndTokenId(
+    client: PrismaClient,
+    contractAddress: string,
+    tokenId: bigint,
+  ) {
+    client.eRC721Token.delete({
+      where: { contractAddress: contractAddress, tokenId: tokenId },
+    });
+  }
+
+  export async function updateOwnerByContractAndTokenId(
     client: PrismaClient,
     contractAddress: string,
     tokenId: bigint,
