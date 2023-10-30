@@ -14,7 +14,7 @@ export namespace ERC721TokenService {
   export async function updateOwnerByTokenId(
     client: PrismaClient,
     contractAddress: string,
-    tokenId: string,
+    tokenId: bigint,
     newOwner: string,
   ) {
     client.eRC721Token.update({

@@ -31,7 +31,7 @@ model ERC721Token {
   id    Int     @id @default(autoincrement())
   contractAddress String
   owner String
-  tokenId String  @unique
+  tokenId BigInt  @unique
 }
 
 model ERC721TokenTransferTx {
@@ -41,14 +41,14 @@ model ERC721TokenTransferTx {
   blockNumber Int
   paramFrom String
   paramTo String
-  paramTokenId String
+  paramTokenId BigInt
 }
 
 model ERC1155Token {
   id    Int     @id @default(autoincrement())
   contractAddress String
   owner String
-  tokenId String  @unique
+  tokenId BigInt
   tokenValue BigInt
 }
 
@@ -68,7 +68,7 @@ model ERC1155TokenTransferTx {
 
 model SNS {
   id    Int     @id @default(autoincrement())
-  tokenId String  @unique
+  tokenId BigInt  @unique
   sns String @unique
   owner String
   registeredDate BigInt

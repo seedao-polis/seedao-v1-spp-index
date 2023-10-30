@@ -10,7 +10,7 @@ export namespace SNSService {
 
   export async function updateOwnerByTokenId(
     client: PrismaClient,
-    tokenId: string,
+    tokenId: bigint,
     owner: string,
   ): Promise<SNS> {
     return client.sNS.update({
@@ -21,7 +21,7 @@ export namespace SNSService {
 
   export async function getByTokenId(
     client: PrismaClient,
-    tokenId: string,
+    tokenId: bigint,
   ): Promise<SNS | null> {
     return client.sNS.findUnique({ where: { tokenId: tokenId } });
   }

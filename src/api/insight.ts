@@ -32,7 +32,7 @@ export namespace insightAPI {
     resp: Response,
   ) {
     const contractAddress: string = req.params.contractAddress;
-    const tokenId: string = req.params.tokenId;
+    const tokenId: bigint = BigInt(req.params.tokenId);
 
     const client: PrismaClient = resp.locals.client;
     const result = await ERC1155TokenService.totalSupplyOfTokenId(

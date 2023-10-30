@@ -6,7 +6,7 @@ import conf from "../../conf.json";
 export namespace snsMetadataAPI {
   // `/metadata/:tokenId`
   export async function metadata(req: Request, resp: Response) {
-    const tokenId: string = req.params.tokenId;
+    const tokenId: bigint = BigInt(req.params.tokenId);
 
     const client: PrismaClient = resp.locals.client;
     const sns = await client.sNS.findUnique({ where: { tokenId: tokenId } });
@@ -51,7 +51,7 @@ export namespace snsMetadataAPI {
 
   // `/metadata/:tokenId/image`
   export async function image(req: Request, resp: Response) {
-    const tokenId: string = req.params.tokenId;
+    const tokenId: bigint = BigInt(req.params.tokenId);
 
     const client: PrismaClient = resp.locals.client;
     const sns = await client.sNS.findUnique({ where: { tokenId: tokenId } });
