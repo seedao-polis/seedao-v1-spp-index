@@ -10,6 +10,32 @@ export namespace ERC721TokenService {
       data: data,
     });
   }
+
+  export async function updateOwnerByTokenId(
+    client: PrismaClient,
+    contractAddress: string,
+    tokenId: string,
+    newOwner: string,
+  ) {
+    client.eRC721Token.update({
+      where: { contractAddress: contractAddress, tokenId: tokenId },
+      data: { owner: newOwner },
+    });
+  }
+
+  export async function totalSupply(
+    client: PrismaClient,
+    contractAddress: string,
+  ): Promise<bigint> {
+    const result = await client.eRC721Token.aggregate({
+      where: { contractAddress: contractAddress },
+      _count: { tokenId: true },
+    });
+    if (result == null) {
+      return BigInt(0);
+    }
+    return BigInt(result._count.tokenId);
+  }
 }
 
 export namespace ERC721TokenTransferTxService {

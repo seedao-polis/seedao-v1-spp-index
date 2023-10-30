@@ -10,6 +10,58 @@ export namespace ERC20TokenService {
       data: data,
     });
   }
+
+  export async function incrementAmount(
+    client: PrismaClient,
+    contractAddress: string,
+    owner: string,
+    amount: bigint,
+  ) {
+    const row = client.eRC20Token.findFirst({
+      where: { contractAddress: contractAddress, owner: owner },
+    });
+    if (row == null) {
+      throw new Error("ERC20TokenService.incrementAmount: row not found");
+    } else {
+      client.eRC20Token.updateMany({
+        where: { contractAddress: contractAddress, owner: owner },
+        data: { amount: { increment: amount } },
+      }); // use `updateMany` not `update` is ok, because using `contractAddress`+`owner` as unique key
+    }
+  }
+
+  export async function decrementAmount(
+    client: PrismaClient,
+    contractAddress: string,
+    owner: string,
+    amount: bigint,
+  ) {
+    const row = client.eRC20Token.findFirst({
+      where: { contractAddress: contractAddress, owner: owner },
+    });
+    if (row == null) {
+      throw new Error("ERC20TokenService.decrementAmount: row not found");
+    } else {
+      client.eRC20Token.updateMany({
+        where: { contractAddress: contractAddress, owner: owner },
+        data: { amount: { decrement: amount } },
+      }); // use `updateMany` not `update` is ok, because using `contractAddress`+`owner` as unique key
+    }
+  }
+
+  export async function totalSupply(
+    client: PrismaClient,
+    contractAddress: string,
+  ): Promise<bigint> {
+    const result = await client.eRC20Token.aggregate({
+      where: { contractAddress: contractAddress },
+      _sum: { amount: true },
+    });
+    if (result == null) {
+      return BigInt(0);
+    }
+    return result._sum.amount ?? BigInt(0);
+  }
 }
 
 export namespace ERC20TokenTransferTxService {

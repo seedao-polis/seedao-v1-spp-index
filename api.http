@@ -1,3 +1,6 @@
+### ----- ----- ----- ----- ----- ----- ----- -----
+### ----- sns
+
 ###
 GET {{host}}/sns/all
 Accept: application/json
@@ -11,6 +14,7 @@ GET {{host}}/sns/by_token_id/526186701934877583344652383124697797144543697004274
 Accept: application/json
 
 ### ----- ----- ----- ----- ----- ----- ----- -----
+### ----- sns_metadata
 
 ###
 GET {{host}}/metadata/52618670193487758334465238312469779714454369700427486871644742693757694306846
@@ -19,3 +23,21 @@ Accept: application/json
 ###
 GET {{host}}/metadata/52618670193487758334465238312469779714454369700427486871644742693757694306846/image
 Accept: application/json
+
+### ----- ----- ----- ----- ----- ----- ----- -----
+### ----- insight
+
+###
+GET {{host}}/insight/erc20/total_supply/0xc74DEE15a4700D5df797bDD3982EE649A3Bb8c6C
+Accept: application/json
+
+###
+GET {{host}}/insight/erc721/total_supply/0x30093266E34a816a53e302bE3e59a93B52792FD4
+Accept: application/json
+
+###
+GET {{host}}/insight/erc1155/total_supply_of_tokenid/0x9d34D407D8586478b3e4c39BE633ED3D7be1c80c/4
+Accept: application/json
+
+###
+GET {{host}}/insight/erc1155/total_supply/0x9d34D407D8586478b3e4c39BE633ED3D7be1c80c

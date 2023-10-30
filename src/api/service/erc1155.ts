@@ -10,6 +10,95 @@ export namespace ERC1155TokenService {
       data: data,
     });
   }
+
+  export async function incrementValueByTokenId(
+    client: PrismaClient,
+    contractAddress: string,
+    tokenId: string,
+    owner: string,
+    value: bigint,
+  ) {
+    const row = await client.eRC1155Token.findFirst({
+      where: {
+        contractAddress: contractAddress,
+        tokenId: tokenId,
+        owner: owner,
+      },
+    });
+    if (row == null) {
+      throw new Error(
+        "ERC1155TokenService.incrementValueByTokenId: row not found",
+      );
+    } else {
+      client.eRC1155Token.updateMany({
+        where: {
+          contractAddress: contractAddress,
+          tokenId: tokenId,
+          owner: owner,
+        },
+        data: { tokenValue: { increment: value } },
+      }); // use `updateMany` not `update` is ok, because using `contractAddress`+`tokenId`+`owner` as unique key
+    }
+  }
+
+  export async function decrementValueByTokenId(
+    client: PrismaClient,
+    contractAddress: string,
+    tokenId: string,
+    owner: string,
+    value: bigint,
+  ) {
+    const row = await client.eRC1155Token.findFirst({
+      where: {
+        contractAddress: contractAddress,
+        tokenId: tokenId,
+        owner: owner,
+      },
+    });
+    if (row == null) {
+      throw new Error(
+        "ERC1155TokenService.decrementValueByTokenId: row not found",
+      );
+    } else {
+      client.eRC1155Token.updateMany({
+        where: {
+          contractAddress: contractAddress,
+          tokenId: tokenId,
+          owner: owner,
+        },
+        data: { tokenValue: { decrement: value } },
+      }); // use `updateMany` not `update` is ok, because using `contractAddress`+`tokenId`+`owner` as unique key
+    }
+  }
+
+  export async function totalSupplyOfTokenId(
+    client: PrismaClient,
+    contractAddress: string,
+    tokenId: string,
+  ): Promise<bigint> {
+    const result = await client.eRC1155Token.aggregate({
+      where: { contractAddress: contractAddress, tokenId: tokenId },
+      _sum: { tokenValue: true },
+    });
+    if (result == null) {
+      return BigInt(0);
+    }
+    return result._sum.tokenValue ?? BigInt(0);
+  }
+
+  export async function totalSupply(
+    client: PrismaClient,
+    contractAddress: string,
+  ): Promise<bigint> {
+    const result = await client.eRC1155Token.aggregate({
+      where: { contractAddress: contractAddress },
+      _sum: { tokenValue: true },
+    });
+    if (result == null) {
+      return BigInt(0);
+    }
+    return result._sum.tokenValue ?? BigInt(0);
+  }
 }
 
 export namespace ERC1155TokenTransferTxService {

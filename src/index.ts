@@ -6,9 +6,18 @@ import { Contract, queryHistoryEvents, subscribeNewEvents } from "./events";
 // @ts-ignore
 import conf from "../conf.json";
 import { sendWebhook } from "./webhook";
-import { ERC20TokenTransferTxService } from "./api/service/erc20";
-import { ERC721TokenTransferTxService } from "./api/service/erc721";
-import { ERC1155TokenTransferTxService } from "./api/service/erc1155";
+import {
+  ERC20TokenService,
+  ERC20TokenTransferTxService,
+} from "./api/service/erc20";
+import {
+  ERC721TokenService,
+  ERC721TokenTransferTxService,
+} from "./api/service/erc721";
+import {
+  ERC1155TokenService,
+  ERC1155TokenTransferTxService,
+} from "./api/service/erc1155";
 import { SNSNameregisteredTxService, SNSService } from "./api/service/sns";
 import { ethers } from "ethers";
 import {
@@ -105,10 +114,32 @@ async function main() {
                   paramValue: arg[2],
                 });
 
-                // save data TODO
+                // save data
                 // don't forget to using `c.decimals`
                 const value = ethers.parseUnits(arg[2], c.decimals);
-                // ERC20TokenService.create(client, {
+                if (arg[0] === ethers.ZeroAddress) {
+                  await ERC20TokenService.create(client, {
+                    id: 0,
+                    contractAddress: c.addr,
+                    owner: arg[1],
+                    amount: value,
+                  });
+                } else {
+                  // `decrementAmount` for `from` address
+                  await ERC20TokenService.decrementAmount(
+                    client,
+                    c.addr,
+                    arg[0],
+                    value,
+                  );
+                  // `incrementAmount` for `to` address
+                  await ERC20TokenService.incrementAmount(
+                    client,
+                    c.addr,
+                    arg[1],
+                    value,
+                  );
+                }
 
                 // add to unHandleEvents
                 unHandleEvents.push({
@@ -191,7 +222,22 @@ async function main() {
                   paramTokenId: arg[2],
                 });
 
-                // save data TODO
+                // save data
+                if (arg[0] === ethers.ZeroAddress) {
+                  await ERC721TokenService.create(client, {
+                    id: 0,
+                    contractAddress: c.addr,
+                    owner: arg[1],
+                    tokenId: arg[2],
+                  });
+                } else {
+                  await ERC721TokenService.updateOwnerByTokenId(
+                    client,
+                    c.addr,
+                    arg[2],
+                    arg[1],
+                  );
+                }
 
                 // add to unHandleEvents
                 unHandleEvents.push({
@@ -279,7 +325,33 @@ async function main() {
                   paramValues: arg[4],
                 });
 
-                // save data TODO
+                // save data
+                if (arg[1] === ethers.ZeroAddress) {
+                  await ERC1155TokenService.create(client, {
+                    id: 0,
+                    contractAddress: c.addr,
+                    owner: arg[2],
+                    tokenId: arg[3],
+                    tokenValue: arg[4],
+                  });
+                } else {
+                  // `decrementValueByTokenId` for `from` address
+                  await ERC1155TokenService.decrementValueByTokenId(
+                    client,
+                    c.addr,
+                    arg[3],
+                    arg[1],
+                    BigInt(arg[4]),
+                  );
+                  // `incrementValueByTokenId` for `to` address
+                  await ERC1155TokenService.incrementValueByTokenId(
+                    client,
+                    c.addr,
+                    arg[3],
+                    arg[2],
+                    BigInt(arg[4]),
+                  );
+                }
 
                 // add to unHandleEvents
                 unHandleEvents.push({
@@ -345,7 +417,39 @@ async function main() {
                   paramValues: arg[4].toString(),
                 });
 
-                // save data TODO
+                // save data
+                const ids = arg[3] as string[];
+                const values = arg[4] as bigint[];
+                if (arg[1] === ethers.ZeroAddress) {
+                  for (let i = 0; i < ids.length; i++) {
+                    await ERC1155TokenService.create(client, {
+                      id: 0,
+                      contractAddress: c.addr,
+                      owner: arg[2],
+                      tokenId: ids[i],
+                      tokenValue: values[i],
+                    });
+                  }
+                } else {
+                  for (let i = 0; i < ids.length; i++) {
+                    // `decrementValueByTokenId` for `from` address
+                    await ERC1155TokenService.decrementValueByTokenId(
+                      client,
+                      c.addr,
+                      ids[i],
+                      arg[1],
+                      values[i],
+                    );
+                    // `incrementValueByTokenId` for `to` address
+                    await ERC1155TokenService.incrementValueByTokenId(
+                      client,
+                      c.addr,
+                      ids[i],
+                      arg[2],
+                      values[i],
+                    );
+                  }
+                }
 
                 // add to unHandleEvents
                 unHandleEvents.push({
