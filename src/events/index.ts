@@ -8,9 +8,11 @@ export interface Contract {
   chainRPC: string;
   events: string[]; // want to listen events
   callbacks: ((
-    args: any[][],
-    blockNumber: number,
-    tx: string,
+    param: {
+      args: any[];
+      blockNumber: number;
+      tx: string;
+    }[],
   ) => Promise<void>)[]; // callbacks for wanting to listen events
 }
 
@@ -41,7 +43,7 @@ export async function queryHistoryEvents(contract: Contract) {
       continue;
     }
 
-    const args = events.map((event) => {
+    const param = events.map((event) => {
       const result = c.interface.decodeEventLog(
         contract.events[i],
         event.data,
@@ -50,18 +52,18 @@ export async function queryHistoryEvents(contract: Contract) {
       // console.log(
       //   `${contract.name}'s History ${
       //     contract.events[i]
-      //   } Event: ${result.toArray()} ${event.blockNumber}`,
+      //   } Event: ${result.toArray()} ${event.blockNumber} ${event.transactionHash}`,
       // );
-      return result.toArray();
+      return {
+        args: result.toArray(),
+        blockNumber: event.blockNumber,
+        tx: event.transactionHash,
+      };
     });
     console.log(
       `----- execute [HISTORY] ${contract.name}'s callback[${i}] -----`,
     );
-    await contract.callbacks[i](
-      args,
-      events[events.length - 1].blockNumber,
-      events[events.length - 1].transactionHash,
-    );
+    await contract.callbacks[i](param);
   }
 }
 
@@ -94,11 +96,13 @@ export async function subscribeNewEvents(contract: Contract) {
       console.log(
         `----- execute [NEW] ${contract.name}'s callback[${i}] -----`,
       );
-      await contract.callbacks[i](
-        [args.slice(0, args.length - 1)],
-        args[args.length - 1].log.blockNumber,
-        args[args.length - 1].log.transactionHash,
-      );
+      await contract.callbacks[i]([
+        {
+          args: [args.slice(0, args.length - 1)],
+          blockNumber: args[args.length - 1].log.blockNumber,
+          tx: args[args.length - 1].log.transactionHash,
+        },
+      ]);
     });
   }
 }

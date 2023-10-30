@@ -1,10 +1,10 @@
 import { PrismaClient } from ".prisma/client";
-import { ERC20Token, ERC20TokenTransferTx } from "@prisma/client";
+import { ERC20Token, ERC20TokenTransferTx, Prisma } from "@prisma/client";
 
 export namespace ERC20TokenService {
   export async function create(
     client: PrismaClient,
-    data: ERC20Token,
+    data: Prisma.ERC20TokenCreateInput,
   ): Promise<ERC20Token> {
     return client.eRC20Token.create({
       data: data,
@@ -67,7 +67,7 @@ export namespace ERC20TokenService {
 export namespace ERC20TokenTransferTxService {
   export async function create(
     client: PrismaClient,
-    data: ERC20TokenTransferTx,
+    data: Prisma.ERC20TokenTransferTxCreateInput,
   ): Promise<ERC20TokenTransferTx> {
     return client.eRC20TokenTransferTx.create({
       data: data,

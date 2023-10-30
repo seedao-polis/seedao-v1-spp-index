@@ -52,7 +52,19 @@ model ERC1155Token {
   tokenValue BigInt
 }
 
-model ERC1155TokenTransferTx {
+model ERC1155TokenTransferSingleTx {
+  id    Int     @id @default(autoincrement())
+  contractAddress String
+  tx String @unique
+  blockNumber Int
+  paramOperator String
+  paramFrom String
+  paramTo String
+  paramId BigInt
+  paramValue BigInt
+}
+
+model ERC1155TokenTransferBatchTx {
   id    Int     @id @default(autoincrement())
   contractAddress String
   tx String @unique

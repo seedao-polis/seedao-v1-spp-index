@@ -1,10 +1,10 @@
 import { PrismaClient } from ".prisma/client";
-import { ERC721Token, ERC721TokenTransferTx } from "@prisma/client";
+import { ERC721Token, ERC721TokenTransferTx, Prisma } from "@prisma/client";
 
 export namespace ERC721TokenService {
   export async function create(
     client: PrismaClient,
-    data: ERC721Token,
+    data: Prisma.ERC721TokenCreateInput,
   ): Promise<ERC721Token> {
     return client.eRC721Token.create({
       data: data,
@@ -41,7 +41,7 @@ export namespace ERC721TokenService {
 export namespace ERC721TokenTransferTxService {
   export async function create(
     client: PrismaClient,
-    data: ERC721TokenTransferTx,
+    data: Prisma.ERC721TokenTransferTxCreateInput,
   ): Promise<ERC721TokenTransferTx> {
     return client.eRC721TokenTransferTx.create({
       data: data,

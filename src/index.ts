@@ -16,7 +16,8 @@ import {
 } from "./api/service/erc721";
 import {
   ERC1155TokenService,
-  ERC1155TokenTransferTxService,
+  ERC1155TokenTransferSingleTxService,
+  ERC1155TokenTransferBatchTxService,
 } from "./api/service/erc1155";
 import { SNSNameregisteredTxService, SNSService } from "./api/service/sns";
 import { ethers } from "ethers";
@@ -37,20 +38,6 @@ interface ContractConf {
 
 interface ERC20Conf extends ContractConf {
   decimals: number;
-}
-
-interface SNSConf {
-  snsSeeDAORegistrarController: {
-    addr: string;
-    chainRPC: string;
-  };
-  snsBaseRegistrar: {
-    addr: string;
-    chainRPC: string;
-  };
-  webhooks: {
-    TransferEvent: string[];
-  };
 }
 
 async function main() {
@@ -82,46 +69,54 @@ async function main() {
         chainRPC: c.chainRPC,
         events: ["Transfer"],
         callbacks: [
-          async (args, blockNumber, tx) => {
-            // [[from, to, value], , ]
-
+          async (params) => {
             const unHandleEvents: {
-              from: string;
-              to: string;
-              value: bigint;
+              metadata: {
+                blockNumber: number;
+                tx: string;
+              };
+              parameters: {
+                from: string;
+                to: string;
+                value: bigint;
+              };
             }[] = [];
 
-            for (const arg of args) {
+            for (const param of params) {
+              // [[from, to, value], , ]
+              const from: string = param.args[0] as string;
+              const to: string = param.args[1] as string;
+              const value: bigint = BigInt(1); // TODO
+              //   ethers.parseEther(
+              //   String(arg[2]),
+              // );
+
               console.log(
-                `[${c.name}.Transfer] Event: ${arg[0]} ${arg[1]} ${arg[2]} ${blockNumber} ${tx}`,
+                `[${c.name}.Transfer] Event: ${from} ${to} ${value} ${param.blockNumber} ${param.tx}`,
               );
 
               const transferTx =
                 await ERC20TokenTransferTxService.getByContractAndTx(
                   client,
                   c.addr,
-                  tx,
+                  param.tx,
                 );
               if (transferTx == null) {
                 // save tx
                 await ERC20TokenTransferTxService.create(client, {
-                  id: 0,
                   contractAddress: c.addr,
-                  tx: tx,
-                  blockNumber: blockNumber,
-                  paramFrom: arg[0],
-                  paramTo: arg[1],
-                  paramValue: arg[2],
+                  tx: param.tx,
+                  blockNumber: param.blockNumber,
+                  paramFrom: from,
+                  paramTo: to,
+                  paramValue: value,
                 });
 
                 // save data
-                // don't forget to using `c.decimals`
-                const value = ethers.parseUnits(arg[2], c.decimals);
-                if (arg[0] === ethers.ZeroAddress) {
+                if (from === ethers.ZeroAddress) {
                   await ERC20TokenService.create(client, {
-                    id: 0,
                     contractAddress: c.addr,
-                    owner: arg[1],
+                    owner: to,
                     amount: value,
                   });
                 } else {
@@ -129,23 +124,29 @@ async function main() {
                   await ERC20TokenService.decrementAmount(
                     client,
                     c.addr,
-                    arg[0],
+                    from,
                     value,
                   );
                   // `incrementAmount` for `to` address
                   await ERC20TokenService.incrementAmount(
                     client,
                     c.addr,
-                    arg[1],
+                    to,
                     value,
                   );
                 }
 
                 // add to unHandleEvents
                 unHandleEvents.push({
-                  from: arg[0],
-                  to: arg[1],
-                  value: value,
+                  metadata: {
+                    blockNumber: param.blockNumber,
+                    tx: param.tx,
+                  },
+                  parameters: {
+                    from: from,
+                    to: to,
+                    value: value,
+                  },
                 });
               }
             }
@@ -161,8 +162,6 @@ async function main() {
                   contractAddress: c.addr,
                   event: "Transfer",
                   data: unHandleEvents,
-                  blockNumber,
-                  tx,
                 },
                 c.webhooks.TransferEvent,
               );
@@ -191,59 +190,72 @@ async function main() {
         chainRPC: c.chainRPC,
         events: ["Transfer"],
         callbacks: [
-          async (args, blockNumber, tx) => {
-            // [[from, to, tokenId], , ]
-
+          async (params) => {
             const unHandleEvents: {
-              from: string;
-              to: string;
-              tokenId: string;
+              metadata: {
+                blockNumber: number;
+                tx: string;
+              };
+              parameters: {
+                from: string;
+                to: string;
+                tokenId: bigint;
+              };
             }[] = [];
-            for (const arg of args) {
+            for (const param of params) {
+              // [[from, to, tokenId], , ]
+              const from: string = param.args[0] as string;
+              const to: string = param.args[1] as string;
+              const tokenId: bigint = param.args[2] as bigint;
+
               console.log(
-                `[${c.name}.Transfer] Event: ${arg[0]} ${arg[1]} ${arg[2]} ${blockNumber} ${tx}`,
+                `[${c.name}.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx}`,
               );
 
               const transferTx =
                 await ERC721TokenTransferTxService.getByContractAndTx(
                   client,
                   c.addr,
-                  tx,
+                  param.tx,
                 );
               if (transferTx == null) {
                 // save tx
                 await ERC721TokenTransferTxService.create(client, {
-                  id: 0,
                   contractAddress: c.addr,
-                  tx: tx,
-                  blockNumber: blockNumber,
-                  paramFrom: arg[0],
-                  paramTo: arg[1],
-                  paramTokenId: arg[2],
+                  tx: param.tx,
+                  blockNumber: param.blockNumber,
+                  paramFrom: from,
+                  paramTo: to,
+                  paramTokenId: tokenId,
                 });
 
                 // save data
-                if (arg[0] === ethers.ZeroAddress) {
+                if (from === ethers.ZeroAddress) {
                   await ERC721TokenService.create(client, {
-                    id: 0,
                     contractAddress: c.addr,
-                    owner: arg[1],
-                    tokenId: arg[2],
+                    owner: to,
+                    tokenId: tokenId,
                   });
                 } else {
                   await ERC721TokenService.updateOwnerByTokenId(
                     client,
                     c.addr,
-                    arg[2],
-                    arg[1],
+                    tokenId,
+                    to,
                   );
                 }
 
                 // add to unHandleEvents
                 unHandleEvents.push({
-                  from: arg[0],
-                  to: arg[1],
-                  tokenId: arg[2],
+                  metadata: {
+                    blockNumber: param.blockNumber,
+                    tx: param.tx,
+                  },
+                  parameters: {
+                    from: from,
+                    to: to,
+                    tokenId: tokenId,
+                  },
                 });
               }
             }
@@ -259,8 +271,6 @@ async function main() {
                   contractAddress: c.addr,
                   event: "Transfer",
                   data: unHandleEvents,
-                  blockNumber,
-                  tx,
                 },
                 c.webhooks.TransferEvent,
               );
@@ -272,12 +282,20 @@ async function main() {
   );
   const ERC1155Contracts: Contract[] = conf.contracts.ERC1155.map(
     (c: ContractConf) => {
+      // use the biggest block number of `TransferSingle` and `TransferBatch` events
       let latestBlockNumber = 0;
-      ERC1155TokenTransferTxService.getLatestBlockNumber(client, c.addr).then(
-        (r) => {
-          latestBlockNumber = r;
-        },
-      );
+      ERC1155TokenTransferSingleTxService.getLatestBlockNumber(
+        client,
+        c.addr,
+      ).then((r) => {
+        latestBlockNumber = r;
+      });
+      ERC1155TokenTransferBatchTxService.getLatestBlockNumber(
+        client,
+        c.addr,
+      ).then((r) => {
+        latestBlockNumber = r > latestBlockNumber ? r : latestBlockNumber;
+      });
 
       return {
         name: c.name,
@@ -290,76 +308,91 @@ async function main() {
         chainRPC: c.chainRPC,
         events: ["TransferSingle", "TransferBatch"],
         callbacks: [
-          async (args, blockNumber, tx) => {
-            // [[operator, from, to, id, value], , ]
-
+          async (params) => {
             const unHandleEvents: {
-              operator: string;
-              from: string;
-              to: string;
-              ids: string[];
-              values: number[];
+              metadata: {
+                blockNumber: number;
+                tx: string;
+              };
+              parameters: {
+                operator: string;
+                from: string;
+                to: string;
+                ids: bigint[];
+                values: bigint[];
+              };
             }[] = [];
-            for (const arg of args) {
+            for (const param of params) {
+              // [[operator, from, to, id, value], , ]
+              const operator: string = param.args[0] as string;
+              const from: string = param.args[1] as string;
+              const to: string = param.args[2] as string;
+              const id: bigint = param.args[3] as bigint;
+              const value: bigint = param.args[4] as bigint;
+
               console.log(
-                `[${c.name}.TransferSingle] Event: ${arg[0]} ${arg[1]} ${arg[2]} ${arg[3]} ${arg[4]} ${blockNumber} ${tx}`,
+                `[${c.name}.TransferSingle] Event: ${operator} ${from} ${to} ${id} ${value} ${param.blockNumber} ${param.tx}`,
               );
 
               const transferTx =
-                await ERC1155TokenTransferTxService.getByContractAndTx(
+                await ERC1155TokenTransferSingleTxService.getByContractAndTx(
                   client,
                   c.addr,
-                  tx,
+                  param.tx,
                 );
               if (transferTx == null) {
                 // save tx
-                await ERC1155TokenTransferTxService.create(client, {
-                  id: 0,
+                await ERC1155TokenTransferSingleTxService.create(client, {
                   contractAddress: c.addr,
-                  tx: tx,
-                  blockNumber: blockNumber,
-                  paramOperator: arg[0],
-                  paramFrom: arg[1],
-                  paramTo: arg[2],
-                  paramIds: arg[3],
-                  paramValues: arg[4],
+                  tx: param.tx,
+                  blockNumber: param.blockNumber,
+                  paramOperator: operator,
+                  paramFrom: from,
+                  paramTo: to,
+                  paramId: id,
+                  paramValue: value,
                 });
 
                 // save data
-                if (arg[1] === ethers.ZeroAddress) {
+                if (from === ethers.ZeroAddress) {
                   await ERC1155TokenService.create(client, {
-                    id: 0,
                     contractAddress: c.addr,
-                    owner: arg[2],
-                    tokenId: arg[3],
-                    tokenValue: arg[4],
+                    owner: to,
+                    tokenId: id,
+                    tokenValue: value,
                   });
                 } else {
                   // `decrementValueByTokenId` for `from` address
                   await ERC1155TokenService.decrementValueByTokenId(
                     client,
                     c.addr,
-                    arg[3],
-                    arg[1],
-                    BigInt(arg[4]),
+                    id,
+                    from,
+                    value,
                   );
                   // `incrementValueByTokenId` for `to` address
                   await ERC1155TokenService.incrementValueByTokenId(
                     client,
                     c.addr,
-                    arg[3],
-                    arg[2],
-                    BigInt(arg[4]),
+                    id,
+                    to,
+                    value,
                   );
                 }
 
                 // add to unHandleEvents
                 unHandleEvents.push({
-                  operator: arg[0],
-                  from: arg[1],
-                  to: arg[2],
-                  ids: [arg[3]], // convert string to array
-                  values: [arg[4]],
+                  metadata: {
+                    blockNumber: param.blockNumber,
+                    tx: param.tx,
+                  },
+                  parameters: {
+                    operator: operator,
+                    from: from,
+                    to: to,
+                    ids: [id], // convert string to array
+                    values: [value],
+                  },
                 });
               }
             }
@@ -375,57 +408,62 @@ async function main() {
                   contractAddress: c.addr,
                   event: "Transfer",
                   data: unHandleEvents,
-                  blockNumber,
-                  tx,
                 },
                 c.webhooks.TransferEvent,
               );
             }
           },
-          async (args, blockNumber, tx) => {
-            // [[operator, from, to, ids, values], , ]
-
+          async (params) => {
             const unHandleEvents: {
-              operator: string;
-              from: string;
-              to: string;
-              ids: string[];
-              values: number[];
+              metadata: {
+                blockNumber: number;
+                tx: string;
+              };
+              parameters: {
+                operator: string;
+                from: string;
+                to: string;
+                ids: bigint[];
+                values: bigint[];
+              };
             }[] = [];
-            for (const arg of args) {
+            for (const param of params) {
+              // [[operator, from, to, ids, values], , ]
+              const operator: string = param.args[0] as string;
+              const from: string = param.args[1] as string;
+              const to: string = param.args[2] as string;
+              const ids: bigint[] = param.args[3] as bigint[];
+              const values: bigint[] = param.args[4] as bigint[];
+
               console.log(
-                `[${c.name}.TransferBatch] Event: ${arg[0]} ${arg[1]} ${arg[2]} ${arg[3]} ${arg[4]} ${blockNumber} ${tx}`,
+                `[${c.name}.TransferBatch] Event: ${operator} ${from} ${to} ${ids} ${values} ${param.blockNumber} ${param.tx}`,
               );
 
               const transferTx =
-                await ERC1155TokenTransferTxService.getByContractAndTx(
+                await ERC1155TokenTransferBatchTxService.getByContractAndTx(
                   client,
                   c.addr,
-                  tx,
+                  param.tx,
                 );
               if (transferTx == null) {
                 // save tx
-                await ERC1155TokenTransferTxService.create(client, {
-                  id: 0,
+                await ERC1155TokenTransferBatchTxService.create(client, {
                   contractAddress: c.addr,
-                  tx: tx,
-                  blockNumber: blockNumber,
-                  paramOperator: arg[0],
-                  paramFrom: arg[1],
-                  paramTo: arg[2],
-                  paramIds: arg[3].toString(), // convert array to string
-                  paramValues: arg[4].toString(),
+                  tx: param.tx,
+                  blockNumber: param.blockNumber,
+                  paramOperator: operator,
+                  paramFrom: from,
+                  paramTo: to,
+                  paramIds: ids.toString(), // convert array to string
+                  paramValues: values.toString(),
                 });
 
                 // save data
-                const ids = arg[3] as string[];
-                const values = arg[4] as bigint[];
-                if (arg[1] === ethers.ZeroAddress) {
+                if (from === ethers.ZeroAddress) {
                   for (let i = 0; i < ids.length; i++) {
                     await ERC1155TokenService.create(client, {
-                      id: 0,
                       contractAddress: c.addr,
-                      owner: arg[2],
+                      owner: to,
                       tokenId: ids[i],
                       tokenValue: values[i],
                     });
@@ -437,7 +475,7 @@ async function main() {
                       client,
                       c.addr,
                       ids[i],
-                      arg[1],
+                      from,
                       values[i],
                     );
                     // `incrementValueByTokenId` for `to` address
@@ -445,7 +483,7 @@ async function main() {
                       client,
                       c.addr,
                       ids[i],
-                      arg[2],
+                      to,
                       values[i],
                     );
                   }
@@ -453,11 +491,17 @@ async function main() {
 
                 // add to unHandleEvents
                 unHandleEvents.push({
-                  operator: arg[0],
-                  from: arg[1],
-                  to: arg[2],
-                  ids: arg[3], // `arg[3]` is array
-                  values: arg[4],
+                  metadata: {
+                    blockNumber: param.blockNumber,
+                    tx: param.tx,
+                  },
+                  parameters: {
+                    operator: operator,
+                    from: from,
+                    to: to,
+                    ids: ids, // `arg[3]` is array
+                    values: values,
+                  },
                 });
               }
             }
@@ -473,8 +517,6 @@ async function main() {
                   contractAddress: c.addr,
                   event: "Transfer",
                   data: unHandleEvents,
-                  blockNumber,
-                  tx,
                 },
                 c.webhooks.TransferEvent,
               );
@@ -494,56 +536,68 @@ async function main() {
       chainRPC: snsConf.snsSeeDAORegistrarController.chainRPC,
       events: ["NameRegistered"],
       callbacks: [
-        async (args, blockNumber, tx) => {
-          // [[name, owner], , ]
-
+        async (params) => {
           const unHandleEvents: {
-            from: string;
-            to: string;
-            tokenId: string;
-            sns: string;
+            metadata: {
+              blockNumber: number;
+              tx: string;
+            };
+            parameters: {
+              from: string;
+              to: string;
+              tokenId: bigint;
+              sns: string;
+            };
           }[] = [];
 
-          for (const arg of args) {
+          for (const param of params) {
+            // [[name, owner], , ]
+            const name: string = param.args[0] as string;
+            const owner: string = param.args[1] as string;
+
             console.log(
-              `[SeeDAORegistrarController.NameRegistered] Event: ${arg[0]} ${arg[1]} ${blockNumber} ${tx}`,
+              `[SeeDAORegistrarController.NameRegistered] Event: ${name} ${owner} ${param.blockNumber} ${param.tx}`,
             );
 
             const transferTx = await SNSNameregisteredTxService.getByTx(
               client,
-              tx,
+              param.tx,
             );
             if (transferTx == null) {
               // save tx
               await SNSNameregisteredTxService.create(client, {
-                id: 0,
-                tx: tx,
-                blockNumber: blockNumber,
-                paramName: arg[0],
-                paramOwner: arg[1],
+                tx: param.tx,
+                blockNumber: param.blockNumber,
+                paramName: name,
+                paramOwner: owner,
               });
 
               // save data
               const tokenId = BigInt(
-                ethers.keccak256(ethers.toUtf8Bytes(arg[0])),
-              ).toString();
+                ethers.keccak256(ethers.toUtf8Bytes(name)),
+              );
               await SNSService.create(client, {
-                id: 0,
                 tokenId: tokenId,
-                sns: arg[0] + ".seedao",
-                owner: arg[1],
+                sns: name + ".seedao",
+                owner: owner,
                 registeredDate: BigInt(Date.now()),
-                length: getCodePointLength(arg[0]),
-                segmentLength: getSegmentLength(arg[0]),
-                characterSet: findCharacterSet(arg[0]),
+                length: getCodePointLength(name),
+                segmentLength: getSegmentLength(name),
+                characterSet: findCharacterSet(name),
               });
 
               // add to unHandleEvents
               unHandleEvents.push({
-                from: ethers.ZeroAddress,
-                to: arg[1],
-                tokenId: tokenId,
-                sns: arg[0] + ".seedao",
+                metadata: {
+                  blockNumber: param.blockNumber,
+                  tx: param.tx,
+                },
+                parameters: {
+                  from: ethers.ZeroAddress,
+                  to: owner,
+                  tokenId: tokenId,
+                  sns: name + ".seedao",
+                },
               });
             }
           }
@@ -559,8 +613,6 @@ async function main() {
                 contractAddress: snsConf.snsSeeDAORegistrarController.addr,
                 event: "Transfer",
                 data: unHandleEvents,
-                blockNumber,
-                tx,
               },
               snsConf.webhooks.TransferEvent,
             );
@@ -581,55 +633,69 @@ async function main() {
       chainRPC: snsConf.snsBaseRegistrar.chainRPC,
       events: ["Transfer"],
       callbacks: [
-        async (args, blockNumber, tx) => {
-          // [[from, to, tokenId], , ]
-
+        async (params) => {
           const unHandleEvents: {
-            from: string;
-            to: string;
-            tokenId: string;
-            sns: string;
+            metadata: {
+              blockNumber: number;
+              tx: string;
+            };
+            parameters: {
+              from: string;
+              to: string;
+              tokenId: bigint;
+              sns: string;
+            };
           }[] = [];
 
-          for (const arg of args) {
+          for (const param of params) {
+            // [[from, to, tokenId], , ]
+            const from: string = param.args[0] as string;
+            const to: string = param.args[1] as string;
+            const tokenId: bigint = param.args[2] as bigint;
+
             console.log(
-              `[BaseRegistrar.Transfer] Event: ${arg[0]} ${arg[1]} ${arg[2]} ${blockNumber} ${tx}`,
+              `[BaseRegistrar.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx}`,
             );
 
             const transferTx =
               await ERC721TokenTransferTxService.getByContractAndTx(
                 client,
                 snsConf.snsBaseRegistrar.addr,
-                tx,
+                param.tx,
               );
             if (transferTx == null) {
               // save tx
               await ERC721TokenTransferTxService.create(client, {
-                id: 0,
                 contractAddress: snsConf.snsBaseRegistrar.addr,
-                tx: tx,
-                blockNumber: blockNumber,
-                paramFrom: arg[0],
-                paramTo: arg[1],
-                paramTokenId: arg[2],
+                tx: param.tx,
+                blockNumber: param.blockNumber,
+                paramFrom: from,
+                paramTo: to,
+                paramTokenId: tokenId,
               });
 
               // save data
-              const sns = await SNSService.getByTokenId(client, arg[2]);
+              const sns = await SNSService.getByTokenId(client, tokenId);
               if (sns == null) {
                 return;
               }
               // Don't handle the event of minting
-              if (arg[0] !== ethers.ZeroAddress) {
-                await SNSService.updateOwnerByTokenId(client, arg[2], arg[1]);
+              if (from !== ethers.ZeroAddress) {
+                await SNSService.updateOwnerByTokenId(client, tokenId, to);
               }
 
               // add to unHandleEvents
               unHandleEvents.push({
-                from: arg[0],
-                to: arg[1],
-                tokenId: arg[2],
-                sns: sns.sns,
+                metadata: {
+                  blockNumber: param.blockNumber,
+                  tx: param.tx,
+                },
+                parameters: {
+                  from: from,
+                  to: to,
+                  tokenId: tokenId,
+                  sns: sns.sns,
+                },
               });
             }
           }
@@ -645,8 +711,6 @@ async function main() {
                 contractAddress: snsConf.snsBaseRegistrar.addr,
                 event: "Transfer",
                 data: unHandleEvents,
-                blockNumber,
-                tx,
               },
               snsConf.webhooks.TransferEvent,
             );

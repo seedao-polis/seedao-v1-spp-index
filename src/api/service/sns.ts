@@ -1,8 +1,11 @@
 import { PrismaClient } from ".prisma/client";
-import { SNS, SNSNameregisteredTx } from "@prisma/client";
+import { SNS, SNSNameregisteredTx, Prisma } from "@prisma/client";
 
 export namespace SNSService {
-  export async function create(client: PrismaClient, data: SNS): Promise<SNS> {
+  export async function create(
+    client: PrismaClient,
+    data: Prisma.SNSCreateInput,
+  ): Promise<SNS> {
     return client.sNS.create({
       data: data,
     });
@@ -30,7 +33,7 @@ export namespace SNSService {
 export namespace SNSNameregisteredTxService {
   export async function create(
     client: PrismaClient,
-    data: SNSNameregisteredTx,
+    data: Prisma.SNSNameregisteredTxCreateInput,
   ): Promise<SNSNameregisteredTx> {
     return client.sNSNameregisteredTx.create({
       data: data,

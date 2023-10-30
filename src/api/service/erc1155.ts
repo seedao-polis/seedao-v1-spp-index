@@ -1,10 +1,15 @@
 import { PrismaClient } from ".prisma/client";
-import { ERC1155Token, ERC1155TokenTransferTx } from "@prisma/client";
+import {
+  ERC1155Token,
+  ERC1155TokenTransferBatchTx,
+  ERC1155TokenTransferSingleTx,
+  Prisma,
+} from "@prisma/client";
 
 export namespace ERC1155TokenService {
   export async function create(
     client: PrismaClient,
-    data: ERC1155Token,
+    data: Prisma.ERC1155TokenCreateInput,
   ): Promise<ERC1155Token> {
     return client.eRC1155Token.create({
       data: data,
@@ -101,12 +106,12 @@ export namespace ERC1155TokenService {
   }
 }
 
-export namespace ERC1155TokenTransferTxService {
+export namespace ERC1155TokenTransferSingleTxService {
   export async function create(
     client: PrismaClient,
-    data: ERC1155TokenTransferTx,
-  ): Promise<ERC1155TokenTransferTx> {
-    return client.eRC1155TokenTransferTx.create({
+    data: Prisma.ERC1155TokenTransferSingleTxCreateInput,
+  ): Promise<ERC1155TokenTransferSingleTx> {
+    return client.eRC1155TokenTransferSingleTx.create({
       data: data,
     });
   }
@@ -115,7 +120,7 @@ export namespace ERC1155TokenTransferTxService {
     client: PrismaClient,
     contractAddress: string,
   ): Promise<number> {
-    const result = await client.eRC1155TokenTransferTx.findFirst({
+    const result = await client.eRC1155TokenTransferSingleTx.findFirst({
       where: { contractAddress: contractAddress },
       orderBy: { blockNumber: "desc" },
     });
@@ -129,8 +134,43 @@ export namespace ERC1155TokenTransferTxService {
     client: PrismaClient,
     contractAddress: string,
     tx: string,
-  ): Promise<ERC1155TokenTransferTx | null> {
-    return client.eRC1155TokenTransferTx.findUnique({
+  ): Promise<ERC1155TokenTransferSingleTx | null> {
+    return client.eRC1155TokenTransferSingleTx.findUnique({
+      where: { contractAddress: contractAddress, tx: tx },
+    });
+  }
+}
+
+export namespace ERC1155TokenTransferBatchTxService {
+  export async function create(
+    client: PrismaClient,
+    data: Prisma.ERC1155TokenTransferBatchTxCreateInput,
+  ): Promise<ERC1155TokenTransferBatchTx> {
+    return client.eRC1155TokenTransferBatchTx.create({
+      data: data,
+    });
+  }
+
+  export async function getLatestBlockNumber(
+    client: PrismaClient,
+    contractAddress: string,
+  ): Promise<number> {
+    const result = await client.eRC1155TokenTransferBatchTx.findFirst({
+      where: { contractAddress: contractAddress },
+      orderBy: { blockNumber: "desc" },
+    });
+    if (result == null) {
+      return 0;
+    }
+    return result.blockNumber;
+  }
+
+  export async function getByContractAndTx(
+    client: PrismaClient,
+    contractAddress: string,
+    tx: string,
+  ): Promise<ERC1155TokenTransferBatchTx | null> {
+    return client.eRC1155TokenTransferBatchTx.findUnique({
       where: { contractAddress: contractAddress, tx: tx },
     });
   }
