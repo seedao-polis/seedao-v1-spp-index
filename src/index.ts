@@ -113,13 +113,7 @@ async function main() {
                 });
 
                 // save data
-                if (from === ethers.ZeroAddress) {
-                  await ERC20TokenService.create(client, {
-                    contractAddress: c.addr,
-                    owner: to,
-                    amount: value,
-                  });
-                } else if (to === ethers.ZeroAddress) {
+                if (from !== ethers.ZeroAddress) {
                   // `decrementAmount` for `from` address
                   await ERC20TokenService.decrementAmount(
                     client,
@@ -127,21 +121,29 @@ async function main() {
                     from,
                     value,
                   );
-                } else {
-                  // `decrementAmount` for `from` address
-                  await ERC20TokenService.decrementAmount(
-                    client,
-                    c.addr,
-                    from,
-                    value,
-                  );
-                  // `incrementAmount` for `to` address
-                  await ERC20TokenService.incrementAmount(
+                }
+                if (to !== ethers.ZeroAddress) {
+                  const row = await ERC20TokenService.getByContractAndOwner(
                     client,
                     c.addr,
                     to,
-                    value,
                   );
+                  if (row == null) {
+                    // `create` for `to` address
+                    await ERC20TokenService.create(client, {
+                      contractAddress: c.addr,
+                      owner: to,
+                      amount: value,
+                    });
+                  } else {
+                    // `incrementAmount` for `to` address
+                    await ERC20TokenService.incrementAmount(
+                      client,
+                      c.addr,
+                      to,
+                      value,
+                    );
+                  }
                 }
 
                 // add to unHandleEvents
@@ -368,14 +370,7 @@ async function main() {
                 });
 
                 // save data
-                if (from === ethers.ZeroAddress) {
-                  await ERC1155TokenService.create(client, {
-                    contractAddress: c.addr,
-                    owner: to,
-                    tokenId: id,
-                    tokenValue: value,
-                  });
-                } else if (to === ethers.ZeroAddress) {
+                if (from !== ethers.ZeroAddress) {
                   // `decrementValueByTokenId` for `from` address
                   await ERC1155TokenService.decrementValueByTokenId(
                     client,
@@ -384,23 +379,33 @@ async function main() {
                     from,
                     value,
                   );
-                } else {
-                  // `decrementValueByTokenId` for `from` address
-                  await ERC1155TokenService.decrementValueByTokenId(
-                    client,
-                    c.addr,
-                    id,
-                    from,
-                    value,
-                  );
-                  // `incrementValueByTokenId` for `to` address
-                  await ERC1155TokenService.incrementValueByTokenId(
-                    client,
-                    c.addr,
-                    id,
-                    to,
-                    value,
-                  );
+                }
+                if (to !== ethers.ZeroAddress) {
+                  let row =
+                    await ERC1155TokenService.getByContractAndTokenIdAndOwner(
+                      client,
+                      c.addr,
+                      id,
+                      to,
+                    );
+                  if (row == null) {
+                    // `create` for `to` address
+                    await ERC1155TokenService.create(client, {
+                      contractAddress: c.addr,
+                      owner: to,
+                      tokenId: id,
+                      tokenValue: value,
+                    });
+                  } else {
+                    // `incrementValueByTokenId` for `to` address
+                    await ERC1155TokenService.incrementValueByTokenId(
+                      client,
+                      c.addr,
+                      id,
+                      to,
+                      value,
+                    );
+                  }
                 }
 
                 // add to unHandleEvents

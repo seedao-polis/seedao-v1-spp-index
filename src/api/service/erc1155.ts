@@ -16,6 +16,21 @@ export namespace ERC1155TokenService {
     });
   }
 
+  export async function getByContractAndTokenIdAndOwner(
+    client: PrismaClient,
+    contractAddress: string,
+    tokenId: bigint,
+    owner: string,
+  ): Promise<ERC1155Token | null> {
+    return client.eRC1155Token.findFirst({
+      where: {
+        contractAddress: contractAddress,
+        tokenId: tokenId,
+        owner: owner,
+      },
+    });
+  }
+
   export async function incrementValueByTokenId(
     client: PrismaClient,
     contractAddress: string,
@@ -32,7 +47,7 @@ export namespace ERC1155TokenService {
     });
     if (row == null) {
       throw new Error(
-        "ERC1155TokenService.incrementValueByTokenId: row not found",
+        `ERC1155TokenService.incrementValueByTokenId: row not found [contract: ${contractAddress} tokenId: ${tokenId} owner: ${owner}]`,
       );
     } else {
       client.eRC1155Token.updateMany({
@@ -62,7 +77,7 @@ export namespace ERC1155TokenService {
     });
     if (row == null) {
       throw new Error(
-        "ERC1155TokenService.decrementValueByTokenId: row not found",
+        `ERC1155TokenService.decrementValueByTokenId: row not found [contract: ${contractAddress} tokenId: ${tokenId} owner: ${owner}]`,
       );
     } else {
       client.eRC1155Token.updateMany({

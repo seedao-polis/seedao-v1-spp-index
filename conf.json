@@ -4,12 +4,13 @@
     "ERC20": [
       {
         "name": "MMERC20",
+        "_comment": "Just For Testing",
         "addr": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
         "decimals": 18,
         "chainRPC": "http://127.0.0.1:8545/",
         "webhooks": {
           "TransferEvent": [
-            "https://httpdump.app/dumps/932449f5-82fb-418d-ab98-43192a1ceda2"
+            "https://httpdump.app/dumps/b3c3304d-f35f-42e0-8999-0564d5244b82"
           ]
         }
       },
@@ -20,7 +21,7 @@
         "chainRPC": "https://eth-mainnet.g.alchemy.com/v2/FU0ujCat3OQd5hIqpddJ94SngVaeSxad",
         "webhooks": {
           "TransferEvent": [
-            "https://httpdump.app/dumps/932449f5-82fb-418d-ab98-43192a1ceda2"
+            "https://httpdump.app/dumps/b3c3304d-f35f-42e0-8999-0564d5244b82"
           ]
         }
       }
@@ -32,19 +33,40 @@
         "chainRPC": "https://eth-mainnet.g.alchemy.com/v2/FU0ujCat3OQd5hIqpddJ94SngVaeSxad",
         "webhooks": {
           "TransferEvent": [
-            "https://httpdump.app/dumps/932449f5-82fb-418d-ab98-43192a1ceda2"
+            "https://httpdump.app/dumps/b3c3304d-f35f-42e0-8999-0564d5244b82"
+          ]
+        }
+      },
+      {
+        "name": "MMERC721",
+        "_comment": "Just For Testing",
+        "addr": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+        "chainRPC": "http://127.0.0.1:8545/",
+        "webhooks": {
+          "TransferEvent": [
+            "https://httpdump.app/dumps/b3c3304d-f35f-42e0-8999-0564d5244b82"
           ]
         }
       }
     ],
     "ERC1155": [
       {
+        "name": "MMERC1155",
+        "addr": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+        "chainRPC": "http://127.0.0.1:8545/",
+        "webhooks": {
+          "TransferEvent": [
+            "https://httpdump.app/dumps/b3c3304d-f35f-42e0-8999-0564d5244b82"
+          ]
+        }
+      },
+      {
         "name": "NODE",
-        "addr": "0x9d34D407D8586478b3e4c39BE633ED3D7be1c80c",
+        "addr": "0x9d34D407D8586478b3e4c39BE633ED3D7be1c80C",
         "chainRPC": "https://eth-mainnet.g.alchemy.com/v2/FU0ujCat3OQd5hIqpddJ94SngVaeSxad",
         "webhooks": {
           "TransferEvent": [
-            "https://httpdump.app/dumps/932449f5-82fb-418d-ab98-43192a1ceda2"
+            "https://httpdump.app/dumps/b3c3304d-f35f-42e0-8999-0564d5244b82"
           ]
         }
       },
@@ -54,7 +76,7 @@
         "chainRPC": "https://polygon-mainnet.g.alchemy.com/v2/-MLinGy2l91vLVZWXmRfNYf9DavMxaEA",
         "webhooks": {
           "TransferEvent": [
-            "https://httpdump.app/dumps/932449f5-82fb-418d-ab98-43192a1ceda2"
+            "https://httpdump.app/dumps/b3c3304d-f35f-42e0-8999-0564d5244b82"
           ]
         }
       },
@@ -65,7 +87,7 @@
         "chainRPC": "https://polygon-mainnet.g.alchemy.com/v2/-MLinGy2l91vLVZWXmRfNYf9DavMxaEA",
         "webhooks": {
           "TransferEvent": [
-            "https://httpdump.app/dumps/932449f5-82fb-418d-ab98-43192a1ceda2"
+            "https://httpdump.app/dumps/b3c3304d-f35f-42e0-8999-0564d5244b82"
           ]
         }
       },
@@ -77,7 +99,7 @@
         "chainRPC": "https://polygon-mainnet.g.alchemy.com/v2/-MLinGy2l91vLVZWXmRfNYf9DavMxaEA",
         "webhooks": {
           "TransferEvent": [
-            "https://httpdump.app/dumps/932449f5-82fb-418d-ab98-43192a1ceda2"
+            "https://httpdump.app/dumps/b3c3304d-f35f-42e0-8999-0564d5244b82"
           ]
         }
       }
@@ -96,7 +118,7 @@
         },
         "webhooks": {
           "TransferEvent": [
-            "https://httpdump.app/dumps/932449f5-82fb-418d-ab98-43192a1ceda2"
+            "https://httpdump.app/dumps/b3c3304d-f35f-42e0-8999-0564d5244b82"
           ]
         }
       }

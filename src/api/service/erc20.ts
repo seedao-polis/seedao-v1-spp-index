@@ -11,6 +11,16 @@ export namespace ERC20TokenService {
     });
   }
 
+  export async function getByContractAndOwner(
+    client: PrismaClient,
+    contractAddress: string,
+    owner: string,
+  ): Promise<ERC20Token | null> {
+    return client.eRC20Token.findFirst({
+      where: { contractAddress: contractAddress, owner: owner },
+    });
+  }
+
   export async function incrementAmount(
     client: PrismaClient,
     contractAddress: string,
@@ -21,7 +31,9 @@ export namespace ERC20TokenService {
       where: { contractAddress: contractAddress, owner: owner },
     });
     if (row == null) {
-      throw new Error("ERC20TokenService.incrementAmount: row not found");
+      throw new Error(
+        `ERC20TokenService.incrementAmount: row not found [contract: ${contractAddress} owner: ${owner}]`,
+      );
     } else {
       client.eRC20Token.updateMany({
         where: { contractAddress: contractAddress, owner: owner },
@@ -40,7 +52,9 @@ export namespace ERC20TokenService {
       where: { contractAddress: contractAddress, owner: owner },
     });
     if (row == null) {
-      throw new Error("ERC20TokenService.decrementAmount: row not found");
+      throw new Error(
+        "ERC20TokenService.decrementAmount: row not found [contract: ${contractAddress} owner: ${owner}]",
+      );
     } else {
       client.eRC20Token.updateMany({
         where: { contractAddress: contractAddress, owner: owner },
