@@ -17,7 +17,7 @@ export namespace ERC20TokenService {
     owner: string,
   ): Promise<ERC20Token | null> {
     return client.eRC20Token.findFirst({
-      where: { contractAddress: contractAddress, owner: owner },
+      where: { contractAddress, owner },
     });
   }
 
@@ -28,7 +28,7 @@ export namespace ERC20TokenService {
     amount: bigint,
   ) {
     const row = client.eRC20Token.findFirst({
-      where: { contractAddress: contractAddress, owner: owner },
+      where: { contractAddress, owner },
     });
     if (row == null) {
       throw new Error(
@@ -36,7 +36,7 @@ export namespace ERC20TokenService {
       );
     } else {
       client.eRC20Token.updateMany({
-        where: { contractAddress: contractAddress, owner: owner },
+        where: { contractAddress, owner },
         data: { amount: { increment: amount } },
       }); // use `updateMany` not `update` is ok, because using `contractAddress`+`owner` as unique key
     }
@@ -49,7 +49,7 @@ export namespace ERC20TokenService {
     amount: bigint,
   ) {
     const row = client.eRC20Token.findFirst({
-      where: { contractAddress: contractAddress, owner: owner },
+      where: { contractAddress, owner },
     });
     if (row == null) {
       throw new Error(
@@ -57,7 +57,7 @@ export namespace ERC20TokenService {
       );
     } else {
       client.eRC20Token.updateMany({
-        where: { contractAddress: contractAddress, owner: owner },
+        where: { contractAddress, owner },
         data: { amount: { decrement: amount } },
       }); // use `updateMany` not `update` is ok, because using `contractAddress`+`owner` as unique key
     }
@@ -68,7 +68,7 @@ export namespace ERC20TokenService {
     contractAddress: string,
   ): Promise<bigint> {
     const result = await client.eRC20Token.aggregate({
-      where: { contractAddress: contractAddress },
+      where: { contractAddress },
       _sum: { amount: true },
     });
     if (result == null) {
@@ -93,7 +93,7 @@ export namespace ERC20TokenTransferTxService {
     contractAddress: string,
   ): Promise<number> {
     const result = await client.eRC20TokenTransferTx.findFirst({
-      where: { contractAddress: contractAddress },
+      where: { contractAddress },
       orderBy: { blockNumber: "desc" },
     });
     if (result == null) {
@@ -106,9 +106,11 @@ export namespace ERC20TokenTransferTxService {
     client: PrismaClient,
     contractAddress: string,
     tx: string,
+    paramFrom: string,
+    paramTo: string,
   ): Promise<ERC20TokenTransferTx | null> {
-    return client.eRC20TokenTransferTx.findUnique({
-      where: { contractAddress: contractAddress, tx: tx },
+    return client.eRC20TokenTransferTx.findFirst({
+      where: { contractAddress, tx, paramTo, paramFrom },
     });
   }
 }

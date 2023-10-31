@@ -15,7 +15,7 @@ export namespace SNSService {
     client: PrismaClient,
     tokenId: bigint,
   ): Promise<void> {
-    client.sNS.delete({ where: { tokenId: tokenId } });
+    client.sNS.delete({ where: { tokenId } });
   }
 
   export async function updateOwnerByTokenId(
@@ -24,7 +24,7 @@ export namespace SNSService {
     owner: string,
   ): Promise<SNS> {
     return client.sNS.update({
-      where: { tokenId: tokenId },
+      where: { tokenId },
       data: { owner: owner },
     });
   }
@@ -33,7 +33,7 @@ export namespace SNSService {
     client: PrismaClient,
     tokenId: bigint,
   ): Promise<SNS | null> {
-    return client.sNS.findUnique({ where: { tokenId: tokenId } });
+    return client.sNS.findUnique({ where: { tokenId } });
   }
 }
 
@@ -62,7 +62,11 @@ export namespace SNSNameregisteredTxService {
   export async function getByTx(
     client: PrismaClient,
     tx: string,
+    paramName: string,
+    paramOwner: string,
   ): Promise<SNSNameregisteredTx | null> {
-    return client.sNSNameregisteredTx.findUnique({ where: { tx: tx } });
+    return client.sNSNameregisteredTx.findFirst({
+      where: { tx, paramName, paramOwner },
+    });
   }
 }

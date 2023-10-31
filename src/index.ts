@@ -26,6 +26,7 @@ import {
   getCodePointLength,
   getSegmentLength,
 } from "./helper/sns_attr";
+import { insightAPI } from "./api/insight";
 
 interface ContractConf {
   name: string;
@@ -100,6 +101,8 @@ async function main() {
                   client,
                   c.addr,
                   param.tx,
+                  from,
+                  to,
                 );
               if (transferTx == null) {
                 // save tx
@@ -227,6 +230,9 @@ async function main() {
                   client,
                   c.addr,
                   param.tx,
+                  from,
+                  to,
+                  tokenId,
                 );
               if (transferTx == null) {
                 // save tx
@@ -355,6 +361,9 @@ async function main() {
                   client,
                   c.addr,
                   param.tx,
+                  from,
+                  to,
+                  id,
                 );
               if (transferTx == null) {
                 // save tx
@@ -472,6 +481,8 @@ async function main() {
                   client,
                   c.addr,
                   param.tx,
+                  from,
+                  to,
                 );
               if (transferTx == null) {
                 // save tx
@@ -601,6 +612,8 @@ async function main() {
             const transferTx = await SNSNameregisteredTxService.getByTx(
               client,
               param.tx,
+              name,
+              owner,
             );
             if (transferTx == null) {
               // save tx
@@ -701,6 +714,9 @@ async function main() {
                 client,
                 snsConf.snsBaseRegistrar.addr,
                 param.tx,
+                from,
+                to,
+                tokenId,
               );
             if (transferTx == null) {
               // save tx
@@ -790,6 +806,23 @@ async function main() {
   // sns metadata apis
   app.get("/metadata/:tokenId", snsMetadataAPI.metadata);
   app.get("/metadata/:tokenId/image", snsMetadataAPI.image);
+  // insight apis
+  app.get(
+    "/insight/erc20/total_supply/:contractAddress",
+    insightAPI.ERC20TotalSupply,
+  );
+  app.get(
+    "/insight/erc721/total_supply/:contractAddress",
+    insightAPI.ERC721TotalSupply,
+  );
+  app.get(
+    "/insight/erc1155/total_supply_of_tokenId/:contractAddress/:tokenId",
+    insightAPI.ERC1155TotalSupplyOfTokenId,
+  );
+  app.get(
+    "/insight/erc1155/total_supply/:contractAddress",
+    insightAPI.ERC1155TotalSupply,
+  );
 
   // start server
   app.listen(3000, () => {

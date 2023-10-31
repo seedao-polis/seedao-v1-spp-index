@@ -17,7 +17,7 @@ export namespace ERC721TokenService {
     tokenId: bigint,
   ) {
     client.eRC721Token.delete({
-      where: { contractAddress: contractAddress, tokenId: tokenId },
+      where: { contractAddress, tokenId },
     });
   }
 
@@ -28,7 +28,7 @@ export namespace ERC721TokenService {
     newOwner: string,
   ) {
     client.eRC721Token.update({
-      where: { contractAddress: contractAddress, tokenId: tokenId },
+      where: { contractAddress, tokenId },
       data: { owner: newOwner },
     });
   }
@@ -38,7 +38,7 @@ export namespace ERC721TokenService {
     contractAddress: string,
   ): Promise<bigint> {
     const result = await client.eRC721Token.aggregate({
-      where: { contractAddress: contractAddress },
+      where: { contractAddress },
       _count: { tokenId: true },
     });
     if (result == null) {
@@ -63,7 +63,7 @@ export namespace ERC721TokenTransferTxService {
     contractAddress: string,
   ): Promise<number> {
     const result = await client.eRC721TokenTransferTx.findFirst({
-      where: { contractAddress: contractAddress },
+      where: { contractAddress },
       orderBy: { blockNumber: "desc" },
     });
     if (result == null) {
@@ -76,9 +76,12 @@ export namespace ERC721TokenTransferTxService {
     client: PrismaClient,
     contractAddress: string,
     tx: string,
+    paramFrom: string,
+    paramTo: string,
+    paramTokenId: bigint,
   ): Promise<ERC721TokenTransferTx | null> {
-    return client.eRC721TokenTransferTx.findUnique({
-      where: { contractAddress: contractAddress, tx: tx },
+    return client.eRC721TokenTransferTx.findFirst({
+      where: { contractAddress, tx, paramTo, paramFrom, paramTokenId },
     });
   }
 }

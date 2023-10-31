@@ -24,9 +24,9 @@ export namespace ERC1155TokenService {
   ): Promise<ERC1155Token | null> {
     return client.eRC1155Token.findFirst({
       where: {
-        contractAddress: contractAddress,
-        tokenId: tokenId,
-        owner: owner,
+        contractAddress,
+        tokenId,
+        owner,
       },
     });
   }
@@ -40,9 +40,9 @@ export namespace ERC1155TokenService {
   ) {
     const row = await client.eRC1155Token.findFirst({
       where: {
-        contractAddress: contractAddress,
-        tokenId: tokenId,
-        owner: owner,
+        contractAddress,
+        tokenId,
+        owner,
       },
     });
     if (row == null) {
@@ -52,9 +52,9 @@ export namespace ERC1155TokenService {
     } else {
       client.eRC1155Token.updateMany({
         where: {
-          contractAddress: contractAddress,
-          tokenId: tokenId,
-          owner: owner,
+          contractAddress,
+          tokenId,
+          owner,
         },
         data: { tokenValue: { increment: value } },
       }); // use `updateMany` not `update` is ok, because using `contractAddress`+`tokenId`+`owner` as unique key
@@ -82,9 +82,9 @@ export namespace ERC1155TokenService {
     } else {
       client.eRC1155Token.updateMany({
         where: {
-          contractAddress: contractAddress,
-          tokenId: tokenId,
-          owner: owner,
+          contractAddress,
+          tokenId,
+          owner,
         },
         data: { tokenValue: { decrement: value } },
       }); // use `updateMany` not `update` is ok, because using `contractAddress`+`tokenId`+`owner` as unique key
@@ -97,7 +97,7 @@ export namespace ERC1155TokenService {
     tokenId: bigint,
   ): Promise<bigint> {
     const result = await client.eRC1155Token.aggregate({
-      where: { contractAddress: contractAddress, tokenId: tokenId },
+      where: { contractAddress, tokenId },
       _sum: { tokenValue: true },
     });
     if (result == null) {
@@ -111,7 +111,7 @@ export namespace ERC1155TokenService {
     contractAddress: string,
   ): Promise<bigint> {
     const result = await client.eRC1155Token.aggregate({
-      where: { contractAddress: contractAddress },
+      where: { contractAddress },
       _sum: { tokenValue: true },
     });
     if (result == null) {
@@ -136,7 +136,7 @@ export namespace ERC1155TokenTransferSingleTxService {
     contractAddress: string,
   ): Promise<number> {
     const result = await client.eRC1155TokenTransferSingleTx.findFirst({
-      where: { contractAddress: contractAddress },
+      where: { contractAddress },
       orderBy: { blockNumber: "desc" },
     });
     if (result == null) {
@@ -149,9 +149,12 @@ export namespace ERC1155TokenTransferSingleTxService {
     client: PrismaClient,
     contractAddress: string,
     tx: string,
+    paramFrom: string,
+    paramTo: string,
+    paramId: bigint,
   ): Promise<ERC1155TokenTransferSingleTx | null> {
-    return client.eRC1155TokenTransferSingleTx.findUnique({
-      where: { contractAddress: contractAddress, tx: tx },
+    return client.eRC1155TokenTransferSingleTx.findFirst({
+      where: { contractAddress, tx, paramFrom, paramTo, paramId },
     });
   }
 }
@@ -171,7 +174,7 @@ export namespace ERC1155TokenTransferBatchTxService {
     contractAddress: string,
   ): Promise<number> {
     const result = await client.eRC1155TokenTransferBatchTx.findFirst({
-      where: { contractAddress: contractAddress },
+      where: { contractAddress },
       orderBy: { blockNumber: "desc" },
     });
     if (result == null) {
@@ -184,9 +187,11 @@ export namespace ERC1155TokenTransferBatchTxService {
     client: PrismaClient,
     contractAddress: string,
     tx: string,
+    paramFrom: string,
+    paramTo: string,
   ): Promise<ERC1155TokenTransferBatchTx | null> {
-    return client.eRC1155TokenTransferBatchTx.findUnique({
-      where: { contractAddress: contractAddress, tx: tx },
+    return client.eRC1155TokenTransferBatchTx.findFirst({
+      where: { contractAddress, tx, paramFrom, paramTo },
     });
   }
 }

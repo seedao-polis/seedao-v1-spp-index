@@ -26,7 +26,7 @@ export namespace insightAPI {
     resp.json({ totalSupply: result.toString() });
   }
 
-  // `insight/erc1155/total_supply_of_tokenid/:contractAddress/:tokenId`
+  // `/insight/erc1155/total_supply_of_tokenId/:contractAddress/:tokenId`
   export async function ERC1155TotalSupplyOfTokenId(
     req: Request,
     resp: Response,
@@ -43,7 +43,7 @@ export namespace insightAPI {
     resp.json({ tokenId: tokenId, totalSupply: result.toString() });
   }
 
-  // `insight/erc1155/total_supply/:contractAddress`
+  // `/insight/erc1155/total_supply/:contractAddress`
   export async function ERC1155TotalSupply(req: Request, resp: Response) {
     const contractAddress: string = req.params.contractAddress;
 

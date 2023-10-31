@@ -61,7 +61,7 @@ export async function queryHistoryEvents(contract: Contract) {
       };
     });
     console.log(
-      `----- execute [HISTORY] ${contract.name}'s callback[${i}] -----`,
+      `----- execute [HISTORY] ${contract.name}'s callback[${i}] (HistoryEventCount=${param.length}) -----`,
     );
     await contract.callbacks[i](param);
   }

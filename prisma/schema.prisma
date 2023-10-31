@@ -20,7 +20,7 @@ model ERC20Token {
 model ERC20TokenTransferTx {
   id    Int     @id @default(autoincrement())
   contractAddress String
-  tx String @unique
+  tx String
   blockNumber Int
   paramFrom String
   paramTo String
@@ -37,7 +37,7 @@ model ERC721Token {
 model ERC721TokenTransferTx {
   id    Int     @id @default(autoincrement())
   contractAddress String
-  tx String @unique
+  tx String
   blockNumber Int
   paramFrom String
   paramTo String
@@ -55,7 +55,7 @@ model ERC1155Token {
 model ERC1155TokenTransferSingleTx {
   id    Int     @id @default(autoincrement())
   contractAddress String
-  tx String @unique
+  tx String
   blockNumber Int
   paramOperator String
   paramFrom String
@@ -67,7 +67,7 @@ model ERC1155TokenTransferSingleTx {
 model ERC1155TokenTransferBatchTx {
   id    Int     @id @default(autoincrement())
   contractAddress String
-  tx String @unique
+  tx String
   blockNumber Int
   paramOperator String
   paramFrom String
@@ -91,7 +91,7 @@ model SNS {
 
 model SNSNameregisteredTx {
   id    Int     @id @default(autoincrement())
-  tx String @unique
+  tx String
   blockNumber Int
   paramName String
   paramOwner String
