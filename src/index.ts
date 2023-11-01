@@ -528,14 +528,32 @@ async function main() {
                     from,
                     values[i],
                   );
-                  // `incrementValueByTokenId` for `to` address
-                  await ERC1155TokenService.incrementValueByTokenId(
-                    client,
-                    c.addr,
-                    ids[i],
-                    to,
-                    values[i],
-                  );
+
+                  const row =
+                    await ERC1155TokenService.getByContractAndTokenIdAndOwner(
+                      client,
+                      c.addr,
+                      ids[i],
+                      to,
+                    );
+                  if (row == null) {
+                    // `create` for `to` address
+                    await ERC1155TokenService.create(client, {
+                      contractAddress: c.addr,
+                      owner: to,
+                      tokenId: ids[i],
+                      tokenValue: values[i],
+                    });
+                  } else {
+                    // `incrementValueByTokenId` for `to` address
+                    await ERC1155TokenService.incrementValueByTokenId(
+                      client,
+                      c.addr,
+                      ids[i],
+                      to,
+                      values[i],
+                    );
+                  }
                 }
               }
 
