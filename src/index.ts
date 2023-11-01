@@ -51,19 +51,15 @@ async function main() {
   const client = new PrismaClient();
 
   // contracts need to indexed
-  const ERC20Contracts: Contract[] = conf.contracts.ERC20.map(
-    (c: ERC20Conf) => {
-      let latestBlockNumber = 0;
-      ERC20TokenTransferTxService.getLatestBlockNumber(client, c.addr).then(
-        (r) => {
-          latestBlockNumber = r;
-        },
-      );
-
+  const ERC20Contracts: Contract[] = await Promise.all(
+    conf.contracts.ERC20.map(async (c: ERC20Conf): Promise<Contract> => {
       return {
         name: c.name,
         addr: c.addr,
-        fromBlock: latestBlockNumber,
+        fromBlock: await ERC20TokenTransferTxService.getLatestBlockNumber(
+          client,
+          c.addr,
+        ),
         abi: [
           "event Transfer(address indexed from, address indexed to, uint256 value)",
         ],
@@ -187,21 +183,17 @@ async function main() {
           },
         ],
       };
-    },
+    }),
   );
-  const ERC721Contracts: Contract[] = conf.contracts.ERC721.map(
-    (c: ContractConf) => {
-      let latestBlockNumber = 0;
-      ERC721TokenTransferTxService.getLatestBlockNumber(client, c.addr).then(
-        (r) => {
-          latestBlockNumber = r;
-        },
-      );
-
+  const ERC721Contracts: Contract[] = await Promise.all(
+    conf.contracts.ERC721.map(async (c: ContractConf): Promise<Contract> => {
       return {
         name: c.name,
         addr: c.addr,
-        fromBlock: latestBlockNumber,
+        fromBlock: await ERC721TokenTransferTxService.getLatestBlockNumber(
+          client,
+          c.addr,
+        ),
         abi: [
           "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
         ],
@@ -309,29 +301,24 @@ async function main() {
           },
         ],
       };
-    },
+    }),
   );
-  const ERC1155Contracts: Contract[] = conf.contracts.ERC1155.map(
-    (c: ContractConf) => {
-      // use the biggest block number of `TransferSingle` and `TransferBatch` events
-      let latestBlockNumber = 0;
-      ERC1155TokenTransferSingleTxService.getLatestBlockNumber(
-        client,
-        c.addr,
-      ).then((r) => {
-        latestBlockNumber = r;
-      });
-      ERC1155TokenTransferBatchTxService.getLatestBlockNumber(
-        client,
-        c.addr,
-      ).then((r) => {
-        latestBlockNumber = r > latestBlockNumber ? r : latestBlockNumber;
-      });
-
+  const ERC1155Contracts: Contract[] = await Promise.all(
+    conf.contracts.ERC1155.map(async (c: ContractConf): Promise<Contract> => {
       return {
         name: c.name,
         addr: c.addr,
-        fromBlock: latestBlockNumber,
+        fromBlock: Math.max(
+          0,
+          await ERC1155TokenTransferSingleTxService.getLatestBlockNumber(
+            client,
+            c.addr,
+          ),
+          await ERC1155TokenTransferBatchTxService.getLatestBlockNumber(
+            client,
+            c.addr,
+          ),
+        ), // use the biggest block number of `TransferSingle` and `TransferBatch` events
         abi: [
           "event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value)",
           "event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values)",
@@ -591,7 +578,7 @@ async function main() {
           },
         ],
       };
-    },
+    }),
   );
   const snsConf = conf.contracts.NO_ERC_STD.sns;
   const SNSContracts: Contract[] = [
