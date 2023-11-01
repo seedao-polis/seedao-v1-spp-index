@@ -11,7 +11,7 @@ export namespace insightAPI {
 
     const client: PrismaClient = resp.locals.client;
     const result = await ERC20TokenService.totalSupply(client, contractAddress);
-    resp.json({ totalSupply: result.toString() });
+    resp.json({ totalSupply: result });
   }
 
   // `/insight/erc721/total_supply/:contractAddress`
@@ -23,7 +23,7 @@ export namespace insightAPI {
       client,
       contractAddress,
     );
-    resp.json({ totalSupply: result.toString() });
+    resp.json({ totalSupply: result });
   }
 
   // `/insight/erc1155/total_supply_of_tokenId/:contractAddress/:tokenId`
@@ -40,7 +40,7 @@ export namespace insightAPI {
       contractAddress,
       tokenId,
     );
-    resp.json({ tokenId: tokenId, totalSupply: result.toString() });
+    resp.json({ tokenId: tokenId, totalSupply: result });
   }
 
   // `/insight/erc1155/total_supply/:contractAddress`
@@ -52,6 +52,6 @@ export namespace insightAPI {
       client,
       contractAddress,
     );
-    resp.json({ totalSupply: result.toString() });
+    resp.json({ totalSupply: result });
   }
 }
