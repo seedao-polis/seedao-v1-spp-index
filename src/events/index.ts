@@ -28,11 +28,7 @@ export async function queryHistoryEvents(contract: Contract) {
   const provider = new JsonRpcProvider(contract.chainRPC);
   // const latestBlockNumber = await provider.getBlockNumber();
 
-  const c = new ethers.Contract(
-    contract.addr,
-    contract.abi,
-    provider,
-  );
+  const c = new ethers.Contract(contract.addr, contract.abi, provider);
 
   for (let i = 0; i < contract.events.length; i++) {
     console.log(

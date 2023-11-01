@@ -107,61 +107,61 @@ async function main() {
               //   );
               // if (transferTx == null) {
               // save tx
-                await ERC20TokenTransferTxService.create(client, {
-                  contractAddress: c.addr,
-                  tx: param.tx,
-                  blockNumber: param.blockNumber,
-                  paramFrom: from,
-                  paramTo: to,
-                  paramValue: value,
-                });
+              await ERC20TokenTransferTxService.create(client, {
+                contractAddress: c.addr,
+                tx: param.tx,
+                blockNumber: param.blockNumber,
+                paramFrom: from,
+                paramTo: to,
+                paramValue: value,
+              });
 
-                // save data
-                if (from !== ethers.ZeroAddress) {
-                  // `decrementAmount` for `from` address
-                  await ERC20TokenService.decrementAmount(
-                    client,
-                    c.addr,
-                    from,
-                    value,
-                  );
-                }
-                if (to !== ethers.ZeroAddress) {
-                  const row = await ERC20TokenService.getByContractAndOwner(
+              // save data
+              if (from !== ethers.ZeroAddress) {
+                // `decrementAmount` for `from` address
+                await ERC20TokenService.decrementAmount(
+                  client,
+                  c.addr,
+                  from,
+                  value,
+                );
+              }
+              if (to !== ethers.ZeroAddress) {
+                const row = await ERC20TokenService.getByContractAndOwner(
+                  client,
+                  c.addr,
+                  to,
+                );
+                if (row == null) {
+                  // `create` for `to` address
+                  await ERC20TokenService.create(client, {
+                    contractAddress: c.addr,
+                    owner: to,
+                    amount: value,
+                  });
+                } else {
+                  // `incrementAmount` for `to` address
+                  await ERC20TokenService.incrementAmount(
                     client,
                     c.addr,
                     to,
+                    value,
                   );
-                  if (row == null) {
-                    // `create` for `to` address
-                    await ERC20TokenService.create(client, {
-                      contractAddress: c.addr,
-                      owner: to,
-                      amount: value,
-                    });
-                  } else {
-                    // `incrementAmount` for `to` address
-                    await ERC20TokenService.incrementAmount(
-                      client,
-                      c.addr,
-                      to,
-                      value,
-                    );
-                  }
                 }
+              }
 
-                // add to unHandleEvents
-                unHandleEvents.push({
-                  metadata: {
-                    blockNumber: param.blockNumber,
-                    tx: param.tx,
-                  },
-                  parameters: {
-                    from: from,
-                    to: to,
-                    value: value,
-                  },
-                });
+              // add to unHandleEvents
+              unHandleEvents.push({
+                metadata: {
+                  blockNumber: param.blockNumber,
+                  tx: param.tx,
+                },
+                parameters: {
+                  from: from,
+                  to: to,
+                  value: value,
+                },
+              });
               // } else {
               //   console.log(
               //     `[${c.name}.Transfer] Event: ${from} ${to} ${value} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
@@ -240,50 +240,50 @@ async function main() {
               //     tokenId,
               //   );
               // if (transferTx == null) {
-                // save tx
-                await ERC721TokenTransferTxService.create(client, {
+              // save tx
+              await ERC721TokenTransferTxService.create(client, {
+                contractAddress: c.addr,
+                tx: param.tx,
+                blockNumber: param.blockNumber,
+                paramFrom: from,
+                paramTo: to,
+                paramTokenId: tokenId,
+              });
+
+              // save data
+              if (from === ethers.ZeroAddress) {
+                await ERC721TokenService.create(client, {
                   contractAddress: c.addr,
-                  tx: param.tx,
+                  owner: to,
+                  tokenId: tokenId,
+                });
+              } else if (to === ethers.ZeroAddress) {
+                await ERC721TokenService.deleteByContractAndTokenId(
+                  client,
+                  c.addr,
+                  tokenId,
+                );
+              } else {
+                await ERC721TokenService.updateOwnerByContractAndTokenId(
+                  client,
+                  c.addr,
+                  tokenId,
+                  to,
+                );
+              }
+
+              // add to unHandleEvents
+              unHandleEvents.push({
+                metadata: {
                   blockNumber: param.blockNumber,
-                  paramFrom: from,
-                  paramTo: to,
-                  paramTokenId: tokenId,
-                });
-
-                // save data
-                if (from === ethers.ZeroAddress) {
-                  await ERC721TokenService.create(client, {
-                    contractAddress: c.addr,
-                    owner: to,
-                    tokenId: tokenId,
-                  });
-                } else if (to === ethers.ZeroAddress) {
-                  await ERC721TokenService.deleteByContractAndTokenId(
-                    client,
-                    c.addr,
-                    tokenId,
-                  );
-                } else {
-                  await ERC721TokenService.updateOwnerByContractAndTokenId(
-                    client,
-                    c.addr,
-                    tokenId,
-                    to,
-                  );
-                }
-
-                // add to unHandleEvents
-                unHandleEvents.push({
-                  metadata: {
-                    blockNumber: param.blockNumber,
-                    tx: param.tx,
-                  },
-                  parameters: {
-                    from: from,
-                    to: to,
-                    tokenId: tokenId,
-                  },
-                });
+                  tx: param.tx,
+                },
+                parameters: {
+                  from: from,
+                  to: to,
+                  tokenId: tokenId,
+                },
+              });
               // } else {
               //   console.log(
               //     `[${c.name}.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
@@ -375,71 +375,71 @@ async function main() {
               //     id,
               //   );
               // if (transferTx == null) {
-                // save tx
-                await ERC1155TokenTransferSingleTxService.create(client, {
-                  contractAddress: c.addr,
-                  tx: param.tx,
-                  blockNumber: param.blockNumber,
-                  paramOperator: operator,
-                  paramFrom: from,
-                  paramTo: to,
-                  paramId: id,
-                  paramValue: value,
-                });
+              // save tx
+              await ERC1155TokenTransferSingleTxService.create(client, {
+                contractAddress: c.addr,
+                tx: param.tx,
+                blockNumber: param.blockNumber,
+                paramOperator: operator,
+                paramFrom: from,
+                paramTo: to,
+                paramId: id,
+                paramValue: value,
+              });
 
-                // save data
-                if (from !== ethers.ZeroAddress) {
-                  // `decrementValueByTokenId` for `from` address
-                  await ERC1155TokenService.decrementValueByTokenId(
+              // save data
+              if (from !== ethers.ZeroAddress) {
+                // `decrementValueByTokenId` for `from` address
+                await ERC1155TokenService.decrementValueByTokenId(
+                  client,
+                  c.addr,
+                  id,
+                  from,
+                  value,
+                );
+              }
+              if (to !== ethers.ZeroAddress) {
+                let row =
+                  await ERC1155TokenService.getByContractAndTokenIdAndOwner(
                     client,
                     c.addr,
                     id,
-                    from,
+                    to,
+                  );
+                if (row == null) {
+                  // `create` for `to` address
+                  await ERC1155TokenService.create(client, {
+                    contractAddress: c.addr,
+                    owner: to,
+                    tokenId: id,
+                    tokenValue: value,
+                  });
+                } else {
+                  // `incrementValueByTokenId` for `to` address
+                  await ERC1155TokenService.incrementValueByTokenId(
+                    client,
+                    c.addr,
+                    id,
+                    to,
                     value,
                   );
                 }
-                if (to !== ethers.ZeroAddress) {
-                  let row =
-                    await ERC1155TokenService.getByContractAndTokenIdAndOwner(
-                      client,
-                      c.addr,
-                      id,
-                      to,
-                    );
-                  if (row == null) {
-                    // `create` for `to` address
-                    await ERC1155TokenService.create(client, {
-                      contractAddress: c.addr,
-                      owner: to,
-                      tokenId: id,
-                      tokenValue: value,
-                    });
-                  } else {
-                    // `incrementValueByTokenId` for `to` address
-                    await ERC1155TokenService.incrementValueByTokenId(
-                      client,
-                      c.addr,
-                      id,
-                      to,
-                      value,
-                    );
-                  }
-                }
+              }
 
-                // add to unHandleEvents
-                unHandleEvents.push({
-                  metadata: {
-                    blockNumber: param.blockNumber,
-                    tx: param.tx,
-                  },
-                  parameters: {
-                    operator: operator,
-                    from: from,
-                    to: to,
-                    ids: [id], // convert string to array
-                    values: [value],
-                  },
-                });
+              // add to unHandleEvents
+              unHandleEvents.push({
+                metadata: {
+                  blockNumber: param.blockNumber,
+                  tx: param.tx,
+                },
+                parameters: {
+                  operator: operator,
+                  from: from,
+                  to: to,
+                  ids: [id], // convert string to array
+                  values: [value],
+                },
+              });
               // } else {
               //   console.log(
               //     `[${c.name}.TransferSingle] Event: ${operator} ${from} ${to} ${id} ${value} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
@@ -498,74 +498,74 @@ async function main() {
               //     to,
               //   );
               // if (transferTx == null) {
-                // save tx
-                await ERC1155TokenTransferBatchTxService.create(client, {
-                  contractAddress: c.addr,
-                  tx: param.tx,
-                  blockNumber: param.blockNumber,
-                  paramOperator: operator,
-                  paramFrom: from,
-                  paramTo: to,
-                  paramIds: ids.toString(), // convert array to string
-                  paramValues: values.toString(),
-                });
+              // save tx
+              await ERC1155TokenTransferBatchTxService.create(client, {
+                contractAddress: c.addr,
+                tx: param.tx,
+                blockNumber: param.blockNumber,
+                paramOperator: operator,
+                paramFrom: from,
+                paramTo: to,
+                paramIds: ids.toString(), // convert array to string
+                paramValues: values.toString(),
+              });
 
-                // save data
-                if (from === ethers.ZeroAddress) {
-                  for (let i = 0; i < ids.length; i++) {
-                    await ERC1155TokenService.create(client, {
-                      contractAddress: c.addr,
-                      owner: to,
-                      tokenId: ids[i],
-                      tokenValue: values[i],
-                    });
-                  }
-                } else if (to === ethers.ZeroAddress) {
-                  for (let i = 0; i < ids.length; i++) {
-                    // `decrementValueByTokenId` for `from` address
-                    await ERC1155TokenService.decrementValueByTokenId(
-                      client,
-                      c.addr,
-                      ids[i],
-                      from,
-                      values[i],
-                    );
-                  }
-                } else {
-                  for (let i = 0; i < ids.length; i++) {
-                    // `decrementValueByTokenId` for `from` address
-                    await ERC1155TokenService.decrementValueByTokenId(
-                      client,
-                      c.addr,
-                      ids[i],
-                      from,
-                      values[i],
-                    );
-                    // `incrementValueByTokenId` for `to` address
-                    await ERC1155TokenService.incrementValueByTokenId(
-                      client,
-                      c.addr,
-                      ids[i],
-                      to,
-                      values[i],
-                    );
-                  }
+              // save data
+              if (from === ethers.ZeroAddress) {
+                for (let i = 0; i < ids.length; i++) {
+                  await ERC1155TokenService.create(client, {
+                    contractAddress: c.addr,
+                    owner: to,
+                    tokenId: ids[i],
+                    tokenValue: values[i],
+                  });
                 }
+              } else if (to === ethers.ZeroAddress) {
+                for (let i = 0; i < ids.length; i++) {
+                  // `decrementValueByTokenId` for `from` address
+                  await ERC1155TokenService.decrementValueByTokenId(
+                    client,
+                    c.addr,
+                    ids[i],
+                    from,
+                    values[i],
+                  );
+                }
+              } else {
+                for (let i = 0; i < ids.length; i++) {
+                  // `decrementValueByTokenId` for `from` address
+                  await ERC1155TokenService.decrementValueByTokenId(
+                    client,
+                    c.addr,
+                    ids[i],
+                    from,
+                    values[i],
+                  );
+                  // `incrementValueByTokenId` for `to` address
+                  await ERC1155TokenService.incrementValueByTokenId(
+                    client,
+                    c.addr,
+                    ids[i],
+                    to,
+                    values[i],
+                  );
+                }
+              }
 
-                // add to unHandleEvents
-                unHandleEvents.push({
-                  metadata: {
-                    blockNumber: param.blockNumber,
-                    tx: param.tx,
-                  },
-                  parameters: {
-                    operator: operator,
-                    from: from,
-                    to: to,
-                    ids: ids, // `arg[3]` is array
-                    values: values,
-                  },
-                });
+              // add to unHandleEvents
+              unHandleEvents.push({
+                metadata: {
+                  blockNumber: param.blockNumber,
+                  tx: param.tx,
+                },
+                parameters: {
+                  operator: operator,
+                  from: from,
+                  to: to,
+                  ids: ids, // `arg[3]` is array
+                  values: values,
+                },
+              });
               // } else {
               //   console.log(
               //     `[${c.name}.TransferBatch] Event: ${operator} ${from} ${to} ${ids} ${values} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
@@ -633,41 +633,39 @@ async function main() {
             //   owner,
             // );
             // if (transferTx == null) {
-              // save tx
-              await SNSNameregisteredTxService.create(client, {
-                tx: param.tx,
-                blockNumber: param.blockNumber,
-                paramName: name,
-                paramOwner: owner,
-              });
+            // save tx
+            await SNSNameregisteredTxService.create(client, {
+              tx: param.tx,
+              blockNumber: param.blockNumber,
+              paramName: name,
+              paramOwner: owner,
+            });
 
-              // save data
-              const tokenId = BigInt(
-                ethers.keccak256(ethers.toUtf8Bytes(name)),
-              );
-              await SNSService.create(client, {
+            // save data
+            const tokenId = BigInt(ethers.keccak256(ethers.toUtf8Bytes(name)));
+            await SNSService.create(client, {
+              tokenId: tokenId,
+              sns: name + ".seedao",
+              owner: owner,
+              registeredDate: BigInt(Date.now()),
+              length: getCodePointLength(name),
+              segmentLength: getSegmentLength(name),
+              characterSet: findCharacterSet(name),
+            });
+
+            // add to unHandleEvents
+            unHandleEvents.push({
+              metadata: {
+                blockNumber: param.blockNumber,
+                tx: param.tx,
+              },
+              parameters: {
+                from: ethers.ZeroAddress,
+                to: owner,
                 tokenId: tokenId,
                 sns: name + ".seedao",
-                owner: owner,
-                registeredDate: BigInt(Date.now()),
-                length: getCodePointLength(name),
-                segmentLength: getSegmentLength(name),
-                characterSet: findCharacterSet(name),
-              });
-
-              // add to unHandleEvents
-              unHandleEvents.push({
-                metadata: {
-                  blockNumber: param.blockNumber,
-                  tx: param.tx,
-                },
-                parameters: {
-                  from: ethers.ZeroAddress,
-                  to: owner,
-                  tokenId: tokenId,
-                  sns: name + ".seedao",
-                },
-              });
+              },
+            });
             // } else {
             //   console.log(
             //     `[SeeDAORegistrarController.NameRegistered] Event: ${name} ${owner} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
@@ -740,43 +738,43 @@ async function main() {
             //     tokenId,
             //   );
             // if (transferTx == null) {
-              // save tx
-              await ERC721TokenTransferTxService.create(client, {
-                contractAddress: snsConf.snsBaseRegistrar.addr,
-                tx: param.tx,
+            // save tx
+            await ERC721TokenTransferTxService.create(client, {
+              contractAddress: snsConf.snsBaseRegistrar.addr,
+              tx: param.tx,
+              blockNumber: param.blockNumber,
+              paramFrom: from,
+              paramTo: to,
+              paramTokenId: tokenId,
+            });
+
+            // save data
+            const sns = await SNSService.getByTokenId(client, tokenId);
+            if (sns == null) {
+              return;
+            }
+            // Don't handle the event of minting
+            if (from !== ethers.ZeroAddress) {
+              if (to === ethers.ZeroAddress) {
+                await SNSService.deleteByTokenId(client, tokenId);
+              } else {
+                await SNSService.updateOwnerByTokenId(client, tokenId, to);
+              }
+            }
+
+            // add to unHandleEvents
+            unHandleEvents.push({
+              metadata: {
                 blockNumber: param.blockNumber,
-                paramFrom: from,
-                paramTo: to,
-                paramTokenId: tokenId,
-              });
-
-              // save data
-              const sns = await SNSService.getByTokenId(client, tokenId);
-              if (sns == null) {
-                return;
-              }
-              // Don't handle the event of minting
-              if (from !== ethers.ZeroAddress) {
-                if (to === ethers.ZeroAddress) {
-                  await SNSService.deleteByTokenId(client, tokenId);
-                } else {
-                  await SNSService.updateOwnerByTokenId(client, tokenId, to);
-                }
-              }
-
-              // add to unHandleEvents
-              unHandleEvents.push({
-                metadata: {
-                  blockNumber: param.blockNumber,
-                  tx: param.tx,
-                },
-                parameters: {
-                  from: from,
-                  to: to,
-                  tokenId: tokenId,
-                  sns: sns.sns,
-                },
-              });
+                tx: param.tx,
+              },
+              parameters: {
+                from: from,
+                to: to,
+                tokenId: tokenId,
+                sns: sns.sns,
+              },
+            });
             // } else {
             //   console.log(
             //     `[BaseRegistrar.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
