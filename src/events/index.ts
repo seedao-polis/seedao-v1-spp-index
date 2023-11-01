@@ -26,17 +26,23 @@ export async function queryHistoryEvents(contract: Contract) {
   }
 
   const provider = new JsonRpcProvider(contract.chainRPC);
-  // const latestBlockNumber = await provider.getBlockNumber();
+  const latestBlockNumber = await provider.getBlockNumber();
 
   const c = new ethers.Contract(contract.addr, contract.abi, provider);
 
   for (let i = 0; i < contract.events.length; i++) {
     console.log(
-      `query ${contract.name}'s ${contract.events[i]} event from block [${contract.fromBlock}]`,
+      `query ${contract.name}'s ${contract.events[i]} event from block[${
+        contract.fromBlock + 1
+      }] to block[${latestBlockNumber}]`,
     );
 
     const filter = c.filters[contract.events[i]]();
-    const events = await c.queryFilter(filter, contract.fromBlock); // querying to `latest` block default
+    const events = await c.queryFilter(
+      filter,
+      contract.fromBlock + 1,
+      latestBlockNumber,
+    );
 
     if (events.length == 0) {
       continue;
