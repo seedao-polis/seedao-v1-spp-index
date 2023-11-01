@@ -96,16 +96,17 @@ async function main() {
                 `[${c.name}.Transfer] Event: ${from} ${to} ${value} ${param.blockNumber} ${param.tx}`,
               );
 
-              const transferTx =
-                await ERC20TokenTransferTxService.getByContractAndTx(
-                  client,
-                  c.addr,
-                  param.tx,
-                  from,
-                  to,
-                );
-              if (transferTx == null) {
-                // save tx
+              // TODO check if the event has been handled(Now is not checking, but is not a problem, because every thins is OK ^-^)
+              // const transferTx =
+              //   await ERC20TokenTransferTxService.getByContractAndTx(
+              //     client,
+              //     c.addr,
+              //     param.tx,
+              //     from,
+              //     to,
+              //   );
+              // if (transferTx == null) {
+              // save tx
                 await ERC20TokenTransferTxService.create(client, {
                   contractAddress: c.addr,
                   tx: param.tx,
@@ -161,7 +162,11 @@ async function main() {
                     value: value,
                   },
                 });
-              }
+              // } else {
+              //   console.log(
+              //     `[${c.name}.Transfer] Event: ${from} ${to} ${value} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+              //   );
+              // }
             }
 
             // send webhook
@@ -225,16 +230,16 @@ async function main() {
                 `[${c.name}.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx}`,
               );
 
-              const transferTx =
-                await ERC721TokenTransferTxService.getByContractAndTx(
-                  client,
-                  c.addr,
-                  param.tx,
-                  from,
-                  to,
-                  tokenId,
-                );
-              if (transferTx == null) {
+              // const transferTx =
+              //   await ERC721TokenTransferTxService.getByContractAndTx(
+              //     client,
+              //     c.addr,
+              //     param.tx,
+              //     from,
+              //     to,
+              //     tokenId,
+              //   );
+              // if (transferTx == null) {
                 // save tx
                 await ERC721TokenTransferTxService.create(client, {
                   contractAddress: c.addr,
@@ -279,7 +284,11 @@ async function main() {
                     tokenId: tokenId,
                   },
                 });
-              }
+              // } else {
+              //   console.log(
+              //     `[${c.name}.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+              //   );
+              // }
             }
 
             // send webhook
@@ -356,16 +365,16 @@ async function main() {
                 `[${c.name}.TransferSingle] Event: ${operator} ${from} ${to} ${id} ${value} ${param.blockNumber} ${param.tx}`,
               );
 
-              const transferTx =
-                await ERC1155TokenTransferSingleTxService.getByContractAndTx(
-                  client,
-                  c.addr,
-                  param.tx,
-                  from,
-                  to,
-                  id,
-                );
-              if (transferTx == null) {
+              // const transferTx =
+              //   await ERC1155TokenTransferSingleTxService.getByContractAndTx(
+              //     client,
+              //     c.addr,
+              //     param.tx,
+              //     from,
+              //     to,
+              //     id,
+              //   );
+              // if (transferTx == null) {
                 // save tx
                 await ERC1155TokenTransferSingleTxService.create(client, {
                   contractAddress: c.addr,
@@ -431,7 +440,11 @@ async function main() {
                     values: [value],
                   },
                 });
-              }
+              // } else {
+              //   console.log(
+              //     `[${c.name}.TransferSingle] Event: ${operator} ${from} ${to} ${id} ${value} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+              //   );
+              // }
             }
 
             // send webhook
@@ -476,15 +489,15 @@ async function main() {
                 `[${c.name}.TransferBatch] Event: ${operator} ${from} ${to} ${ids} ${values} ${param.blockNumber} ${param.tx}`,
               );
 
-              const transferTx =
-                await ERC1155TokenTransferBatchTxService.getByContractAndTx(
-                  client,
-                  c.addr,
-                  param.tx,
-                  from,
-                  to,
-                );
-              if (transferTx == null) {
+              // const transferTx =
+              //   await ERC1155TokenTransferBatchTxService.getByContractAndTx(
+              //     client,
+              //     c.addr,
+              //     param.tx,
+              //     from,
+              //     to,
+              //   );
+              // if (transferTx == null) {
                 // save tx
                 await ERC1155TokenTransferBatchTxService.create(client, {
                   contractAddress: c.addr,
@@ -553,7 +566,11 @@ async function main() {
                     values: values,
                   },
                 });
-              }
+              // } else {
+              //   console.log(
+              //     `[${c.name}.TransferBatch] Event: ${operator} ${from} ${to} ${ids} ${values} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+              //   );
+              // }
             }
 
             // send webhook
@@ -609,13 +626,13 @@ async function main() {
               `[SeeDAORegistrarController.NameRegistered] Event: ${name} ${owner} ${param.blockNumber} ${param.tx}`,
             );
 
-            const transferTx = await SNSNameregisteredTxService.getByTx(
-              client,
-              param.tx,
-              name,
-              owner,
-            );
-            if (transferTx == null) {
+            // const transferTx = await SNSNameregisteredTxService.getByTx(
+            //   client,
+            //   param.tx,
+            //   name,
+            //   owner,
+            // );
+            // if (transferTx == null) {
               // save tx
               await SNSNameregisteredTxService.create(client, {
                 tx: param.tx,
@@ -651,7 +668,11 @@ async function main() {
                   sns: name + ".seedao",
                 },
               });
-            }
+            // } else {
+            //   console.log(
+            //     `[SeeDAORegistrarController.NameRegistered] Event: ${name} ${owner} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+            //   );
+            // }
           }
 
           // send webhook
@@ -709,16 +730,16 @@ async function main() {
               `[BaseRegistrar.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx}`,
             );
 
-            const transferTx =
-              await ERC721TokenTransferTxService.getByContractAndTx(
-                client,
-                snsConf.snsBaseRegistrar.addr,
-                param.tx,
-                from,
-                to,
-                tokenId,
-              );
-            if (transferTx == null) {
+            // const transferTx =
+            //   await ERC721TokenTransferTxService.getByContractAndTx(
+            //     client,
+            //     snsConf.snsBaseRegistrar.addr,
+            //     param.tx,
+            //     from,
+            //     to,
+            //     tokenId,
+            //   );
+            // if (transferTx == null) {
               // save tx
               await ERC721TokenTransferTxService.create(client, {
                 contractAddress: snsConf.snsBaseRegistrar.addr,
@@ -756,7 +777,11 @@ async function main() {
                   sns: sns.sns,
                 },
               });
-            }
+            // } else {
+            //   console.log(
+            //     `[BaseRegistrar.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+            //   );
+            // }
           }
 
           // send webhook

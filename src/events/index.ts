@@ -25,10 +25,13 @@ export async function queryHistoryEvents(contract: Contract) {
     throw new Error("events and callbacks length not match");
   }
 
+  const provider = new JsonRpcProvider(contract.chainRPC);
+  // const latestBlockNumber = await provider.getBlockNumber();
+
   const c = new ethers.Contract(
     contract.addr,
     contract.abi,
-    new JsonRpcProvider(contract.chainRPC),
+    provider,
   );
 
   for (let i = 0; i < contract.events.length; i++) {
@@ -37,7 +40,7 @@ export async function queryHistoryEvents(contract: Contract) {
     );
 
     const filter = c.filters[contract.events[i]]();
-    const events = await c.queryFilter(filter, contract.fromBlock);
+    const events = await c.queryFilter(filter, contract.fromBlock); // querying to `latest` block default
 
     if (events.length == 0) {
       continue;
