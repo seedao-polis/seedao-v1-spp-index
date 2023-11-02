@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 // @ts-ignore
 import conf from "../../conf.json";
+import { SNSService } from "./service/sns";
 
 export namespace snsMetadataAPI {
   // `/metadata/:tokenId`
@@ -9,7 +10,7 @@ export namespace snsMetadataAPI {
     const tokenId: string = req.params.tokenId;
 
     const client: PrismaClient = resp.locals.client;
-    const sns = await client.sNS.findUnique({ where: { tokenId: tokenId } });
+    const sns = await SNSService.getByTokenId(client, tokenId);
 
     if (sns === null) {
       resp.status(404).json({ error: "SNS Not Found" });
@@ -54,7 +55,7 @@ export namespace snsMetadataAPI {
     const tokenId: string = req.params.tokenId;
 
     const client: PrismaClient = resp.locals.client;
-    const sns = await client.sNS.findUnique({ where: { tokenId: tokenId } });
+    const sns = await SNSService.getByTokenId(client, tokenId);
 
     if (sns === null) {
       resp.status(404).json({ error: "SNS Not Found" });

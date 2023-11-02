@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { SNSService } from "./service/sns";
 
 export namespace snsAPI {
   // `/sns/all`
@@ -27,7 +28,7 @@ export namespace snsAPI {
     const tokenId: string = req.params.tokenId;
 
     const client: PrismaClient = resp.locals.client;
-    const sns = await client.sNS.findUnique({ where: { tokenId: tokenId } });
+    const sns = await SNSService.getByTokenId(client, tokenId);
     if (sns == null) {
       resp.status(404).json({ error: "SNS not found" });
       return;

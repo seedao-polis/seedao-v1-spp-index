@@ -26,7 +26,7 @@ export namespace SNSService {
   ): Promise<SNS> {
     return client.sNS.update({
       where: { tokenId },
-      data: { owner: owner, timestamp: timestamp },
+      data: { owner: owner, registeredDate: timestamp },
     });
   }
 
