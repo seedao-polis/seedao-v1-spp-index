@@ -72,16 +72,17 @@ export namespace ERC721TokenTransferTxService {
     return result.blockNumber;
   }
 
-  export async function getByContractAndTx(
+  export async function getByContractAndTxAndHandler(
     client: PrismaClient,
     contractAddress: string,
     tx: string,
     paramFrom: string,
     paramTo: string,
     paramTokenId: bigint,
+    handler: string,
   ): Promise<ERC721TokenTransferTx | null> {
     return client.eRC721TokenTransferTx.findFirst({
-      where: { contractAddress, tx, paramTo, paramFrom, paramTokenId },
+      where: { contractAddress, tx, paramTo, paramFrom, paramTokenId, handler },
     });
   }
 }

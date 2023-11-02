@@ -145,16 +145,17 @@ export namespace ERC1155TokenTransferSingleTxService {
     return result.blockNumber;
   }
 
-  export async function getByContractAndTx(
+  export async function getByContractAndTxAndHandler(
     client: PrismaClient,
     contractAddress: string,
     tx: string,
     paramFrom: string,
     paramTo: string,
     paramId: bigint,
+    handler: string,
   ): Promise<ERC1155TokenTransferSingleTx | null> {
     return client.eRC1155TokenTransferSingleTx.findFirst({
-      where: { contractAddress, tx, paramFrom, paramTo, paramId },
+      where: { contractAddress, tx, paramFrom, paramTo, paramId, handler },
     });
   }
 }
@@ -183,15 +184,16 @@ export namespace ERC1155TokenTransferBatchTxService {
     return result.blockNumber;
   }
 
-  export async function getByContractAndTx(
+  export async function getByContractAndTxAndHandler(
     client: PrismaClient,
     contractAddress: string,
     tx: string,
     paramFrom: string,
     paramTo: string,
+    handler: string,
   ): Promise<ERC1155TokenTransferBatchTx | null> {
     return client.eRC1155TokenTransferBatchTx.findFirst({
-      where: { contractAddress, tx, paramFrom, paramTo },
+      where: { contractAddress, tx, paramFrom, paramTo, handler },
     });
   }
 }

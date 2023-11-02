@@ -102,15 +102,16 @@ export namespace ERC20TokenTransferTxService {
     return result.blockNumber;
   }
 
-  export async function getByContractAndTx(
+  export async function getByContractAndTxAndHandler(
     client: PrismaClient,
     contractAddress: string,
     tx: string,
     paramFrom: string,
     paramTo: string,
+    handler: string,
   ): Promise<ERC20TokenTransferTx | null> {
     return client.eRC20TokenTransferTx.findFirst({
-      where: { contractAddress, tx, paramTo, paramFrom },
+      where: { contractAddress, tx, paramTo, paramFrom, handler },
     });
   }
 }

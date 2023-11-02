@@ -1,5 +1,16 @@
 import { ethers, WebSocketProvider, JsonRpcProvider } from "ethers";
 
+export type CallbackParam = {
+  args: any[];
+  blockNumber: number;
+  tx: string;
+};
+export type CallbackHandler = "query" | "on"; // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
+
+export function toggle(handler: CallbackHandler) {
+  return handler == "query" ? "on" : "query";
+}
+
 export interface Contract {
   name: string;
   addr: string;
@@ -8,11 +19,8 @@ export interface Contract {
   chainRPC: string;
   events: string[]; // want to listen events
   callbacks: ((
-    param: {
-      args: any[];
-      blockNumber: number;
-      tx: string;
-    }[],
+    param: CallbackParam[],
+    handler: CallbackHandler,
   ) => Promise<void>)[]; // callbacks for wanting to listen events
 }
 
@@ -26,7 +34,11 @@ export async function queryHistoryEvents(contract: Contract) {
   }
 
   const provider = new JsonRpcProvider(contract.chainRPC);
-  const latestBlockNumber = await provider.getBlockNumber();
+  let latestBlockNumber = await provider.getBlockNumber();
+  latestBlockNumber =
+    latestBlockNumber > contract.fromBlock + 1
+      ? latestBlockNumber
+      : contract.fromBlock + 1;
 
   const c = new ethers.Contract(contract.addr, contract.abi, provider);
 
@@ -68,7 +80,7 @@ export async function queryHistoryEvents(contract: Contract) {
     console.log(
       `----- execute [HISTORY] ${contract.name}'s callback[${i}] (HistoryEventCount=${param.length}) -----`,
     );
-    await contract.callbacks[i](param);
+    await contract.callbacks[i](param, "query");
   }
 }
 
@@ -101,13 +113,16 @@ export async function subscribeNewEvents(contract: Contract) {
       console.log(
         `----- execute [NEW] ${contract.name}'s callback[${i}] -----`,
       );
-      await contract.callbacks[i]([
-        {
-          args: [args.slice(0, args.length - 1)],
-          blockNumber: args[args.length - 1].log.blockNumber,
-          tx: args[args.length - 1].log.transactionHash,
-        },
-      ]);
+      await contract.callbacks[i](
+        [
+          {
+            args: [args.slice(0, args.length - 1)],
+            blockNumber: args[args.length - 1].log.blockNumber,
+            tx: args[args.length - 1].log.transactionHash,
+          },
+        ],
+        "on",
+      );
     });
   }
 }

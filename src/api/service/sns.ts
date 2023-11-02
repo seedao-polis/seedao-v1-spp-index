@@ -59,14 +59,15 @@ export namespace SNSNameregisteredTxService {
     return result.blockNumber;
   }
 
-  export async function getByTx(
+  export async function getByTxAndHandler(
     client: PrismaClient,
     tx: string,
     paramName: string,
     paramOwner: string,
+    handler: string,
   ): Promise<SNSNameregisteredTx | null> {
     return client.sNSNameregisteredTx.findFirst({
-      where: { tx, paramName, paramOwner },
+      where: { tx, paramName, paramOwner, handler },
     });
   }
 }
