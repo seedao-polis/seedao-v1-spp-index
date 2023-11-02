@@ -32,6 +32,7 @@ import {
   getSegmentLength,
 } from "./helper/sns_attr";
 import { insightAPI } from "./api/insight";
+import { snsSnapshotAPI } from "./api/sns_snapshot";
 
 interface ContractConf {
   name: string;
@@ -871,6 +872,8 @@ async function main() {
   app.get("/sns/all", snsAPI.all);
   app.get("/sns/by_token_id/:tokenId", snsAPI.byTokenId);
   app.get("/sns/by_name", snsAPI.byName);
+  // sns snapshot apis
+  app.get("/sns/snapshot/:timestamp", snsSnapshotAPI.snapshot);
   // sns metadata apis
   app.get("/metadata/:tokenId", snsMetadataAPI.metadata);
   app.get("/metadata/:tokenId/image", snsMetadataAPI.image);

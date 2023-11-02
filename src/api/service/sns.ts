@@ -36,6 +36,15 @@ export namespace SNSService {
   ): Promise<SNS | null> {
     return client.sNS.findUnique({ where: { tokenId } });
   }
+
+  export async function getBeforeTimestamp(
+    client: PrismaClient,
+    timestamp: number,
+  ): Promise<SNS[]> {
+    return client.sNS.findMany({
+      where: { registeredDate: { lte: timestamp } },
+    });
+  }
 }
 
 export namespace SNSNameregisteredTxService {
