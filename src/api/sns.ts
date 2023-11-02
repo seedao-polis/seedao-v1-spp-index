@@ -24,7 +24,7 @@ export namespace snsAPI {
 
   // `/sns/by_token_id/:tokenId`
   export async function byTokenId(req: Request, resp: Response) {
-    const tokenId: bigint = BigInt(req.params.tokenId);
+    const tokenId: string = req.params.tokenId;
 
     const client: PrismaClient = resp.locals.client;
     const sns = await client.sNS.findUnique({ where: { tokenId: tokenId } });

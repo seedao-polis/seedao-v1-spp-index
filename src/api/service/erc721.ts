@@ -14,7 +14,7 @@ export namespace ERC721TokenService {
   export async function deleteByContractAndTokenId(
     client: PrismaClient,
     contractAddress: string,
-    tokenId: bigint,
+    tokenId: string,
   ) {
     client.eRC721Token.delete({
       where: { contractAddress, tokenId },
@@ -24,7 +24,7 @@ export namespace ERC721TokenService {
   export async function updateOwnerByContractAndTokenId(
     client: PrismaClient,
     contractAddress: string,
-    tokenId: bigint,
+    tokenId: string,
     newOwner: string,
   ) {
     client.eRC721Token.update({
@@ -78,7 +78,7 @@ export namespace ERC721TokenTransferTxService {
     tx: string,
     paramFrom: string,
     paramTo: string,
-    paramTokenId: bigint,
+    paramTokenId: string,
     handler: string,
   ): Promise<ERC721TokenTransferTx | null> {
     return client.eRC721TokenTransferTx.findFirst({

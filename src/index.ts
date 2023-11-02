@@ -216,14 +216,14 @@ async function main() {
               parameters: {
                 from: string;
                 to: string;
-                tokenId: bigint;
+                tokenId: string;
               };
             }[] = [];
             for (const param of params) {
               // [[from, to, tokenId], , ]
               const from: string = param.args[0] as string;
               const to: string = param.args[1] as string;
-              const tokenId: bigint = param.args[2] as bigint;
+              const tokenId: string = param.args[2].toString();
 
               console.log(
                 `[${c.name}.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx}`,
@@ -346,7 +346,7 @@ async function main() {
                 operator: string;
                 from: string;
                 to: string;
-                ids: bigint[];
+                ids: string[];
                 values: bigint[];
               };
             }[] = [];
@@ -355,7 +355,7 @@ async function main() {
               const operator: string = param.args[0] as string;
               const from: string = param.args[1] as string;
               const to: string = param.args[2] as string;
-              const id: bigint = param.args[3] as bigint;
+              const id: string = param.args[3].toString();
               const value: bigint = param.args[4] as bigint;
 
               console.log(
@@ -473,7 +473,7 @@ async function main() {
                 operator: string;
                 from: string;
                 to: string;
-                ids: bigint[];
+                ids: string[];
                 values: bigint[];
               };
             }[] = [];
@@ -482,7 +482,9 @@ async function main() {
               const operator: string = param.args[0] as string;
               const from: string = param.args[1] as string;
               const to: string = param.args[2] as string;
-              const ids: bigint[] = param.args[3] as bigint[];
+              const ids: string[] = (param.args[3] as bigint[]).map((id) => {
+                return id.toString();
+              });
               const values: bigint[] = param.args[4] as bigint[];
 
               console.log(
@@ -633,7 +635,7 @@ async function main() {
             parameters: {
               from: string;
               to: string;
-              tokenId: bigint;
+              tokenId: string;
               sns: string;
             };
           }[] = [];
@@ -667,8 +669,8 @@ async function main() {
               });
 
               // save data
-              const tokenId = BigInt(
-                ethers.keccak256(ethers.toUtf8Bytes(name)),
+              const tokenId: string = ethers.keccak256(
+                ethers.toUtf8Bytes(name),
               );
               await SNSService.create(client, {
                 tokenId: tokenId,
@@ -740,7 +742,7 @@ async function main() {
             parameters: {
               from: string;
               to: string;
-              tokenId: bigint;
+              tokenId: string;
               sns: string;
             };
           }[] = [];
@@ -749,7 +751,7 @@ async function main() {
             // [[from, to, tokenId], , ]
             const from: string = param.args[0] as string;
             const to: string = param.args[1] as string;
-            const tokenId: bigint = param.args[2] as bigint;
+            const tokenId: string = param.args[2].toString();
 
             console.log(
               `[BaseRegistrar.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx}`,

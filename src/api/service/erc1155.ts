@@ -19,7 +19,7 @@ export namespace ERC1155TokenService {
   export async function getByContractAndTokenIdAndOwner(
     client: PrismaClient,
     contractAddress: string,
-    tokenId: bigint,
+    tokenId: string,
     owner: string,
   ): Promise<ERC1155Token | null> {
     return client.eRC1155Token.findFirst({
@@ -34,7 +34,7 @@ export namespace ERC1155TokenService {
   export async function incrementValueByTokenId(
     client: PrismaClient,
     contractAddress: string,
-    tokenId: bigint,
+    tokenId: string,
     owner: string,
     value: bigint,
   ) {
@@ -64,7 +64,7 @@ export namespace ERC1155TokenService {
   export async function decrementValueByTokenId(
     client: PrismaClient,
     contractAddress: string,
-    tokenId: bigint,
+    tokenId: string,
     owner: string,
     value: bigint,
   ) {
@@ -94,7 +94,7 @@ export namespace ERC1155TokenService {
   export async function totalSupplyOfTokenId(
     client: PrismaClient,
     contractAddress: string,
-    tokenId: bigint,
+    tokenId: string,
   ): Promise<bigint> {
     const result = await client.eRC1155Token.aggregate({
       where: { contractAddress, tokenId },
@@ -151,7 +151,7 @@ export namespace ERC1155TokenTransferSingleTxService {
     tx: string,
     paramFrom: string,
     paramTo: string,
-    paramId: bigint,
+    paramId: string,
     handler: string,
   ): Promise<ERC1155TokenTransferSingleTx | null> {
     return client.eRC1155TokenTransferSingleTx.findFirst({
