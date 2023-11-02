@@ -22,10 +22,11 @@ export namespace SNSService {
     client: PrismaClient,
     tokenId: string,
     owner: string,
+    timestamp: number,
   ): Promise<SNS> {
     return client.sNS.update({
       where: { tokenId },
-      data: { owner: owner },
+      data: { owner: owner, timestamp: timestamp },
     });
   }
 

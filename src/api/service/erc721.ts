@@ -26,10 +26,11 @@ export namespace ERC721TokenService {
     contractAddress: string,
     tokenId: string,
     newOwner: string,
+    timestamp: number,
   ) {
     client.eRC721Token.update({
       where: { contractAddress, tokenId },
-      data: { owner: newOwner },
+      data: { owner: newOwner, timestamp: timestamp },
     });
   }
 

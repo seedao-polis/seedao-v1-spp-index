@@ -96,7 +96,7 @@ async function main() {
               console.log(
                 `[${c.name}.Transfer] Event: ${from} ${to} ${value} ${param.blockNumber} ${param.tx}`,
               );
-
+              // 949436_000_000_000_000_000_000
               // check if the event has been handled
               const transferTx =
                 await ERC20TokenTransferTxService.getByContractAndTxAndHandler(
@@ -113,6 +113,7 @@ async function main() {
                   contractAddress: c.addr,
                   tx: param.tx,
                   blockNumber: param.blockNumber,
+                  timestamp: param.timestamp,
                   handler: handler,
                   paramFrom: from,
                   paramTo: to,
@@ -246,6 +247,7 @@ async function main() {
                   contractAddress: c.addr,
                   tx: param.tx,
                   blockNumber: param.blockNumber,
+                  timestamp: param.timestamp,
                   handler: handler,
                   paramFrom: from,
                   paramTo: to,
@@ -258,6 +260,7 @@ async function main() {
                     contractAddress: c.addr,
                     owner: to,
                     tokenId: tokenId,
+                    timestamp: param.timestamp,
                   });
                 } else if (to === ethers.ZeroAddress) {
                   await ERC721TokenService.deleteByContractAndTokenId(
@@ -271,6 +274,7 @@ async function main() {
                     c.addr,
                     tokenId,
                     to,
+                    param.timestamp,
                   );
                 }
 
@@ -379,6 +383,7 @@ async function main() {
                   contractAddress: c.addr,
                   tx: param.tx,
                   blockNumber: param.blockNumber,
+                  timestamp: param.timestamp,
                   handler: handler,
                   paramOperator: operator,
                   paramFrom: from,
@@ -507,6 +512,7 @@ async function main() {
                   contractAddress: c.addr,
                   tx: param.tx,
                   blockNumber: param.blockNumber,
+                  timestamp: param.timestamp,
                   handler: handler,
                   paramOperator: operator,
                   paramFrom: from,
@@ -663,6 +669,7 @@ async function main() {
               await SNSNameregisteredTxService.create(client, {
                 tx: param.tx,
                 blockNumber: param.blockNumber,
+                timestamp: param.timestamp,
                 handler: handler,
                 paramName: name,
                 paramOwner: owner,
@@ -676,7 +683,7 @@ async function main() {
                 tokenId: tokenId,
                 sns: name + ".seedao",
                 owner: owner,
-                registeredDate: BigInt(Date.now()),
+                registeredDate: param.timestamp,
                 length: getCodePointLength(name),
                 segmentLength: getSegmentLength(name),
                 characterSet: findCharacterSet(name),
@@ -774,6 +781,7 @@ async function main() {
                 contractAddress: snsConf.snsBaseRegistrar.addr,
                 tx: param.tx,
                 blockNumber: param.blockNumber,
+                timestamp: param.timestamp,
                 handler: handler,
                 paramFrom: from,
                 paramTo: to,
@@ -790,7 +798,12 @@ async function main() {
                 if (to === ethers.ZeroAddress) {
                   await SNSService.deleteByTokenId(client, tokenId);
                 } else {
-                  await SNSService.updateOwnerByTokenId(client, tokenId, to);
+                  await SNSService.updateOwnerByTokenId(
+                    client,
+                    tokenId,
+                    to,
+                    param.timestamp,
+                  );
                 }
               }
 

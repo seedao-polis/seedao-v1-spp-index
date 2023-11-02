@@ -22,6 +22,7 @@ model ERC20TokenTransferTx {
   contractAddress String
   tx String
   blockNumber Int
+  timestamp Int
   handler String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
   paramFrom String
   paramTo String
@@ -33,6 +34,7 @@ model ERC721Token {
   contractAddress String
   owner String
   tokenId String  @unique
+  timestamp Int
 }
 
 model ERC721TokenTransferTx {
@@ -40,6 +42,7 @@ model ERC721TokenTransferTx {
   contractAddress String
   tx String
   blockNumber Int
+  timestamp Int
   handler String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
   paramFrom String
   paramTo String
@@ -59,6 +62,7 @@ model ERC1155TokenTransferSingleTx {
   contractAddress String
   tx String
   blockNumber Int
+  timestamp Int
   handler String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
   paramOperator String
   paramFrom String
@@ -72,6 +76,7 @@ model ERC1155TokenTransferBatchTx {
   contractAddress String
   tx String
   blockNumber Int
+  timestamp Int
   handler String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
   paramOperator String
   paramFrom String
@@ -87,7 +92,7 @@ model SNS {
   tokenId String  @unique
   sns String @unique
   owner String
-  registeredDate BigInt
+  registeredDate Int
   length Int
   segmentLength Int
   characterSet String
@@ -97,6 +102,7 @@ model SNSNameregisteredTx {
   id    Int     @id @default(autoincrement())
   tx String
   blockNumber Int
+  timestamp Int
   handler String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
   paramName String
   paramOwner String
