@@ -14,7 +14,7 @@ model ERC20Token {
   id    Int     @id @default(autoincrement())
   contractAddress String
   owner String
-  amount BigInt
+  amount Decimal
 }
 
 model ERC20TokenTransferTx {
@@ -26,7 +26,7 @@ model ERC20TokenTransferTx {
   handler String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
   paramFrom String
   paramTo String
-  paramValue BigInt
+  paramValue Decimal
 }
 
 model ERC721Token {

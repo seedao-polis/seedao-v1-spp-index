@@ -25,7 +25,7 @@ export namespace ERC20TokenService {
     client: PrismaClient,
     contractAddress: string,
     owner: string,
-    amount: bigint,
+    amount: Prisma.Decimal,
   ) {
     const row = client.eRC20Token.findFirst({
       where: { contractAddress, owner },
@@ -46,7 +46,7 @@ export namespace ERC20TokenService {
     client: PrismaClient,
     contractAddress: string,
     owner: string,
-    amount: bigint,
+    amount: Prisma.Decimal,
   ) {
     const row = client.eRC20Token.findFirst({
       where: { contractAddress, owner },
@@ -66,15 +66,15 @@ export namespace ERC20TokenService {
   export async function totalSupply(
     client: PrismaClient,
     contractAddress: string,
-  ): Promise<bigint> {
+  ): Promise<Prisma.Decimal> {
     const result = await client.eRC20Token.aggregate({
       where: { contractAddress },
       _sum: { amount: true },
     });
     if (result == null) {
-      return BigInt(0);
+      return new Prisma.Decimal(0);
     }
-    return result._sum.amount ?? BigInt(0);
+    return result._sum.amount ?? new Prisma.Decimal(0);
   }
 }
 

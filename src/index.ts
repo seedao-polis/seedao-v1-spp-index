@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import { snsAPI } from "./api/sns";
 import { snsMetadataAPI } from "./api/sns_metadata";
 import {
@@ -59,6 +59,7 @@ async function main() {
   // contracts need to indexed
   const ERC20Contracts: Contract[] = await Promise.all(
     conf.contracts.ERC20.map(async (c: ERC20Conf): Promise<Contract> => {
+      const decimalD = new Prisma.Decimal(Math.pow(10, c.decimals));
       return {
         name: c.name,
         addr: c.addr,
@@ -81,7 +82,7 @@ async function main() {
               parameters: {
                 from: string;
                 to: string;
-                value: bigint;
+                value: Prisma.Decimal;
               };
             }[] = [];
 
@@ -89,15 +90,14 @@ async function main() {
               // [[from, to, value], , ]
               const from: string = param.args[0] as string;
               const to: string = param.args[1] as string;
-              const value: bigint = BigInt(1); // TODO
-              //   ethers.parseEther(
-              //   String(arg[2]),
-              // );
+              const value: Prisma.Decimal = new Prisma.Decimal(
+                param.args[2].toString(),
+              ).dividedBy(decimalD);
 
               console.log(
                 `[${c.name}.Transfer] Event: ${from} ${to} ${value} ${param.blockNumber} ${param.tx}`,
               );
-              // 949436_000_000_000_000_000_000
+
               // check if the event has been handled
               const transferTx =
                 await ERC20TokenTransferTxService.getByContractAndTxAndHandler(
