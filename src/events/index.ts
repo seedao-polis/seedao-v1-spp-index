@@ -64,41 +64,44 @@ export async function queryHistoryEvents(contract: Contract) {
       continue;
     }
 
-    const param = await Promise.all(
-      events.map(async (event) => {
-        const result = c.interface.decodeEventLog(
-          contract.events[i],
-          event.data,
-          event.topics,
-        );
-        // console.log(
-        //   `${contract.name}'s History ${
-        //     contract.events[i]
-        //   } Event: ${result.toArray()} ${event.blockNumber} ${event.transactionHash}`,
-        // );
-        let block = blocks.get(event.blockNumber);
-        if (block == undefined) {
-          const b = await provider.getBlock(event.blockNumber);
-          if (b == null) {
-            throw new Error(`call 'getBlock(${event.blockNumber})' failed`);
-          }
-          console.log(
-            `call 'getBlock(${event.blockNumber})' success, block's timestamp=${b.timestamp}`,
-          );
-
-          block = b;
-          // cache block data
-          blocks.set(event.blockNumber, block);
+    const param: CallbackParam[] = [];
+    for (const event of events) {
+      const result = c.interface.decodeEventLog(
+        contract.events[i],
+        event.data,
+        event.topics,
+      );
+      // console.log(
+      //   `${contract.name}'s History ${
+      //     contract.events[i]
+      //   } Event: ${result.toArray()} ${event.blockNumber} ${event.transactionHash}`,
+      // );
+      let block = blocks.get(event.blockNumber);
+      if (block == undefined) {
+        const b = await provider.getBlock(event.blockNumber);
+        if (b == null) {
+          throw new Error(`call 'getBlock(${event.blockNumber})' failed`);
         }
-        const timestamp = block!!.timestamp;
-        return {
-          args: result.toArray(),
-          blockNumber: event.blockNumber,
-          tx: event.transactionHash,
-          timestamp: timestamp,
-        };
-      }),
-    );
+
+        block = b;
+        // cache block data
+        blocks.set(event.blockNumber, block);
+        console.log(
+          `save block[${event.blockNumber}] to cache, block's timestamp=${block.timestamp}`,
+        );
+        // } else {
+        //   console.log(
+        //     `get block[${event.blockNumber}] from cache, block's timestamp=${block.timestamp}`,
+        //   );
+      }
+
+      param.push({
+        args: result.toArray(),
+        blockNumber: event.blockNumber,
+        tx: event.transactionHash,
+        timestamp: block!!.timestamp,
+      });
+    }
     console.log(
       `----- execute [HISTORY] ${contract.name}'s callback[${i}] (HistoryEventCount=${param.length}) -----`,
     );

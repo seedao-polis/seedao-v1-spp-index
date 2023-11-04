@@ -77,6 +77,7 @@ async function main() {
             const unHandleEvents: {
               metadata: {
                 blockNumber: number;
+                timestamp: number;
                 tx: string;
               };
               parameters: {
@@ -159,6 +160,7 @@ async function main() {
                 unHandleEvents.push({
                   metadata: {
                     blockNumber: param.blockNumber,
+                    timestamp: param.timestamp,
                     tx: param.tx,
                   },
                   parameters: {
@@ -213,6 +215,7 @@ async function main() {
             const unHandleEvents: {
               metadata: {
                 blockNumber: number;
+                timestamp: number;
                 tx: string;
               };
               parameters: {
@@ -283,6 +286,7 @@ async function main() {
                 unHandleEvents.push({
                   metadata: {
                     blockNumber: param.blockNumber,
+                    timestamp: param.timestamp,
                     tx: param.tx,
                   },
                   parameters: {
@@ -345,6 +349,7 @@ async function main() {
             const unHandleEvents: {
               metadata: {
                 blockNumber: number;
+                timestamp: number;
                 tx: string;
               };
               parameters: {
@@ -436,6 +441,7 @@ async function main() {
                 unHandleEvents.push({
                   metadata: {
                     blockNumber: param.blockNumber,
+                    timestamp: param.timestamp,
                     tx: param.tx,
                   },
                   parameters: {
@@ -473,6 +479,7 @@ async function main() {
             const unHandleEvents: {
               metadata: {
                 blockNumber: number;
+                timestamp: number;
                 tx: string;
               };
               parameters: {
@@ -586,6 +593,7 @@ async function main() {
                 unHandleEvents.push({
                   metadata: {
                     blockNumber: param.blockNumber,
+                    timestamp: param.timestamp,
                     tx: param.tx,
                   },
                   parameters: {
@@ -637,6 +645,7 @@ async function main() {
           const unHandleEvents: {
             metadata: {
               blockNumber: number;
+              timestamp: number;
               tx: string;
             };
             parameters: {
@@ -694,6 +703,7 @@ async function main() {
               unHandleEvents.push({
                 metadata: {
                   blockNumber: param.blockNumber,
+                  timestamp: param.timestamp,
                   tx: param.tx,
                 },
                 parameters: {
@@ -745,6 +755,7 @@ async function main() {
           const unHandleEvents: {
             metadata: {
               blockNumber: number;
+              timestamp: number;
               tx: string;
             };
             parameters: {
@@ -812,6 +823,7 @@ async function main() {
               unHandleEvents.push({
                 metadata: {
                   blockNumber: param.blockNumber,
+                  timestamp: param.timestamp,
                   tx: param.tx,
                 },
                 parameters: {
