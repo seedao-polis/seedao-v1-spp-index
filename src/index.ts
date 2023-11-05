@@ -33,6 +33,7 @@ import {
 } from "./helper/sns_attr";
 import { insightAPI } from "./api/insight";
 import { snsSnapshotAPI } from "./api/sns_snapshot";
+import { erc721SnapshotAPI } from "./api/erc721_snapshot";
 
 interface ContractConf {
   name: string;
@@ -889,6 +890,9 @@ async function main() {
   // sns metadata apis
   app.get("/metadata/:tokenId", snsMetadataAPI.metadata);
   app.get("/metadata/:tokenId/image", snsMetadataAPI.image);
+  // erc721 apis
+  app.get("/erc721/snapshot/:contract/:timestamp", erc721SnapshotAPI.snapshot);
+
   // insight apis
   app.get(
     "/insight/erc20/total_supply/:contractAddress",

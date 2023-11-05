@@ -34,6 +34,16 @@ export namespace ERC721TokenService {
     });
   }
 
+  export async function getBeforeTimestamp(
+    client: PrismaClient,
+    contractAddress: string,
+    timestamp: number,
+  ): Promise<ERC721Token[]> {
+    return client.eRC721Token.findMany({
+      where: { contractAddress, timestamp: { lte: timestamp } },
+    });
+  }
+
   export async function totalSupply(
     client: PrismaClient,
     contractAddress: string,
