@@ -6,17 +6,106 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgres"
   url      = env("DATABASE_URL")
 }
 
-model sns {
+model ERC20Token {
+  id    Int     @id @default(autoincrement())
+  contractAddress String
+  owner String
+  amount Decimal
+}
+
+model ERC20TokenTransferTx {
+  id    Int     @id @default(autoincrement())
+  contractAddress String
+  tx String
+  blockNumber Int
+  timestamp Int
+  handler String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
+  paramFrom String
+  paramTo String
+  paramValue Decimal
+}
+
+model ERC721Token {
+  id    Int     @id @default(autoincrement())
+  contractAddress String
+  owner String
+  tokenId String  @unique
+  timestamp Int
+}
+
+model ERC721TokenTransferTx {
+  id    Int     @id @default(autoincrement())
+  contractAddress String
+  tx String
+  blockNumber Int
+  timestamp Int
+  handler String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
+  paramFrom String
+  paramTo String
+  paramTokenId String
+}
+
+model ERC1155Token {
+  id    Int     @id @default(autoincrement())
+  contractAddress String
+  owner String
+  tokenId String
+  tokenValue BigInt
+}
+
+model ERC1155TokenTransferSingleTx {
+  id    Int     @id @default(autoincrement())
+  contractAddress String
+  tx String
+  blockNumber Int
+  timestamp Int
+  handler String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
+  paramOperator String
+  paramFrom String
+  paramTo String
+  paramId String
+  paramValue BigInt
+}
+
+model ERC1155TokenTransferBatchTx {
+  id    Int     @id @default(autoincrement())
+  contractAddress String
+  tx String
+  blockNumber Int
+  timestamp Int
+  handler String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
+  paramOperator String
+  paramFrom String
+  paramTo String
+  paramIds String
+  paramValues String
+}
+
+// --------------------------------------
+
+model SNS {
   id    Int     @id @default(autoincrement())
   tokenId String  @unique
   sns String @unique
   owner String
-  registeredDate BigInt
+  registeredDate Int
   length Int
   segmentLength Int
   characterSet String
 }
+
+model SNSNameregisteredTx {
+  id    Int     @id @default(autoincrement())
+  tx String
+  blockNumber Int
+  timestamp Int
+  handler String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
+  paramName String
+  paramOwner String
+}
+
+// SNSTransferTx saved at 'ERC721TokenTransferTx' table

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { SNSService } from "./service/sns";
 
 export namespace snsAPI {
   // `/sns/all`
@@ -10,17 +11,10 @@ export namespace snsAPI {
 
   // `/sns/by_name?name=abc.seedao`
   export async function byName(req: Request, resp: Response) {
-    /*
-     #swagger.tags = ['SNS']
-     #swagger.summary = 'Get SNS by name'
-     #swagger.path = '/sns/by_name'
-     #swagger.method = 'get'
-     #swagger.parameters['name'] = { in: query, type: 'string', description: 'SNS name' }
-     */
     const name: string = req.query.name as string;
 
     const client: PrismaClient = resp.locals.client;
-    const sns = await client.sns.findUnique({ where: { sns: name } });
+    const sns = await client.sNS.findUnique({ where: { sns: name } });
     if (sns == null) {
       resp.status(404).json({ error: "SNS not found" });
       return;
@@ -34,7 +28,7 @@ export namespace snsAPI {
     const tokenId: string = req.params.tokenId;
 
     const client: PrismaClient = resp.locals.client;
-    const sns = await client.sns.findUnique({ where: { tokenId: tokenId } });
+    const sns = await SNSService.getByTokenId(client, tokenId);
     if (sns == null) {
       resp.status(404).json({ error: "SNS not found" });
       return;
