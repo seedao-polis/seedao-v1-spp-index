@@ -865,7 +865,7 @@ async function main() {
   const contracts = [
     ...ERC20Contracts,
     ...ERC721Contracts,
-    // ...ERC1155Contracts,
+    ...ERC1155Contracts,
     ...SNSContracts,
   ];
   for (const contract of contracts) {
