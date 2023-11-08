@@ -6,7 +6,7 @@ export namespace ERC20TokenService {
     client: PrismaClient,
     data: Prisma.ERC20TokenCreateInput,
   ): Promise<ERC20Token> {
-    return client.eRC20Token.create({
+    return await client.eRC20Token.create({
       data: data,
     });
   }
@@ -16,7 +16,7 @@ export namespace ERC20TokenService {
     contractAddress: string,
     owner: string,
   ): Promise<ERC20Token | null> {
-    return client.eRC20Token.findFirst({
+    return await client.eRC20Token.findFirst({
       where: { contractAddress, owner },
     });
   }
@@ -27,7 +27,7 @@ export namespace ERC20TokenService {
     owner: string,
     amount: Prisma.Decimal,
   ) {
-    const row = client.eRC20Token.findFirst({
+    const row = await client.eRC20Token.findFirst({
       where: { contractAddress, owner },
     });
     if (row == null) {
@@ -35,7 +35,7 @@ export namespace ERC20TokenService {
         `ERC20TokenService.incrementAmount: row not found [contract: ${contractAddress} owner: ${owner}]`,
       );
     } else {
-      client.eRC20Token.updateMany({
+      await client.eRC20Token.updateMany({
         where: { contractAddress, owner },
         data: { amount: { increment: amount } },
       }); // use `updateMany` not `update` is ok, because using `contractAddress`+`owner` as unique key
@@ -48,7 +48,7 @@ export namespace ERC20TokenService {
     owner: string,
     amount: Prisma.Decimal,
   ) {
-    const row = client.eRC20Token.findFirst({
+    const row = await client.eRC20Token.findFirst({
       where: { contractAddress, owner },
     });
     if (row == null) {
@@ -56,7 +56,7 @@ export namespace ERC20TokenService {
         "ERC20TokenService.decrementAmount: row not found [contract: ${contractAddress} owner: ${owner}]",
       );
     } else {
-      client.eRC20Token.updateMany({
+      await client.eRC20Token.updateMany({
         where: { contractAddress, owner },
         data: { amount: { decrement: amount } },
       }); // use `updateMany` not `update` is ok, because using `contractAddress`+`owner` as unique key
@@ -83,7 +83,7 @@ export namespace ERC20TokenTransferTxService {
     client: PrismaClient,
     data: Prisma.ERC20TokenTransferTxCreateInput,
   ): Promise<ERC20TokenTransferTx> {
-    return client.eRC20TokenTransferTx.create({
+    return await client.eRC20TokenTransferTx.create({
       data: data,
     });
   }
@@ -110,8 +110,21 @@ export namespace ERC20TokenTransferTxService {
     paramTo: string,
     handler: string,
   ): Promise<ERC20TokenTransferTx | null> {
-    return client.eRC20TokenTransferTx.findFirst({
+    return await client.eRC20TokenTransferTx.findFirst({
       where: { contractAddress, tx, paramTo, paramFrom, handler },
+    });
+  }
+
+  export async function getBeforeTimestamp(
+    client: PrismaClient,
+    contractAddress: string,
+    timestamp: number,
+  ): Promise<ERC20TokenTransferTx[]> {
+    return await client.eRC20TokenTransferTx.findMany({
+      where: { contractAddress, timestamp: { lte: timestamp } },
+      orderBy: {
+        id: "asc",
+      },
     });
   }
 }

@@ -6,7 +6,7 @@ export namespace SNSService {
     client: PrismaClient,
     data: Prisma.SNSCreateInput,
   ): Promise<SNS> {
-    return client.sNS.create({
+    return await client.sNS.create({
       data: data,
     });
   }
@@ -15,7 +15,7 @@ export namespace SNSService {
     client: PrismaClient,
     tokenId: string,
   ): Promise<void> {
-    client.sNS.delete({ where: { tokenId } });
+    await client.sNS.delete({ where: { tokenId } });
   }
 
   export async function updateOwnerByTokenId(
@@ -24,7 +24,7 @@ export namespace SNSService {
     owner: string,
     timestamp: number,
   ): Promise<SNS> {
-    return client.sNS.update({
+    return await client.sNS.update({
       where: { tokenId },
       data: { owner: owner, registeredDate: timestamp },
     });
@@ -34,16 +34,7 @@ export namespace SNSService {
     client: PrismaClient,
     tokenId: string,
   ): Promise<SNS | null> {
-    return client.sNS.findUnique({ where: { tokenId } });
-  }
-
-  export async function getBeforeTimestamp(
-    client: PrismaClient,
-    timestamp: number,
-  ): Promise<SNS[]> {
-    return client.sNS.findMany({
-      where: { registeredDate: { lte: timestamp } },
-    });
+    return await client.sNS.findUnique({ where: { tokenId } });
   }
 }
 
@@ -52,7 +43,7 @@ export namespace SNSNameregisteredTxService {
     client: PrismaClient,
     data: Prisma.SNSNameregisteredTxCreateInput,
   ): Promise<SNSNameregisteredTx> {
-    return client.sNSNameregisteredTx.create({
+    return await client.sNSNameregisteredTx.create({
       data: data,
     });
   }
@@ -76,8 +67,20 @@ export namespace SNSNameregisteredTxService {
     paramOwner: string,
     handler: string,
   ): Promise<SNSNameregisteredTx | null> {
-    return client.sNSNameregisteredTx.findFirst({
+    return await client.sNSNameregisteredTx.findFirst({
       where: { tx, paramName, paramOwner, handler },
+    });
+  }
+
+  export async function getBeforeTimestamp(
+    client: PrismaClient,
+    timestamp: number,
+  ): Promise<SNSNameregisteredTx[]> {
+    return await client.sNSNameregisteredTx.findMany({
+      where: { timestamp: { lte: timestamp } },
+      orderBy: {
+        id: "asc",
+      },
     });
   }
 }

@@ -34,6 +34,8 @@ import {
 import { insightAPI } from "./api/insight";
 import { snsSnapshotAPI } from "./api/sns_snapshot";
 import { erc721SnapshotAPI } from "./api/erc721_snapshot";
+import { erc20SnapshotAPI } from "./api/erc20_snapshot";
+import { erc1155SnapshotAPI } from "./api/erc1155_snapshot";
 
 interface ContractConf {
   name: string;
@@ -97,7 +99,7 @@ async function main() {
               ).dividedBy(decimalD);
 
               console.log(
-                `[${c.name}.Transfer] Event: ${from} ${to} ${value} ${param.blockNumber} ${param.tx}`,
+                `[${c.name}.Transfer] Event: ${from} ${to} ${value} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
               );
 
               // check if the event has been handled
@@ -232,7 +234,7 @@ async function main() {
               const tokenId: string = param.args[2].toString();
 
               console.log(
-                `[${c.name}.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx}`,
+                `[${c.name}.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
               );
 
               // check if the event has been handled
@@ -370,7 +372,7 @@ async function main() {
               const value: bigint = param.args[4] as bigint;
 
               console.log(
-                `[${c.name}.TransferSingle] Event: ${operator} ${from} ${to} ${id} ${value} ${param.blockNumber} ${param.tx}`,
+                `[${c.name}.TransferSingle] Event: ${operator} ${from} ${to} ${id} ${value} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
               );
 
               // check if the event has been handled
@@ -502,7 +504,7 @@ async function main() {
               const values: bigint[] = param.args[4] as bigint[];
 
               console.log(
-                `[${c.name}.TransferBatch] Event: ${operator} ${from} ${to} ${ids} ${values} ${param.blockNumber} ${param.tx}`,
+                `[${c.name}.TransferBatch] Event: ${operator} ${from} ${to} ${ids} ${values} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
               );
 
               // check if the event has been handled
@@ -526,8 +528,8 @@ async function main() {
                   paramOperator: operator,
                   paramFrom: from,
                   paramTo: to,
-                  paramIds: ids.toString(), // convert array to string
-                  paramValues: values.toString(),
+                  paramIds: ids.join("##"), // convert array to string
+                  paramValues: values.join("##"),
                 });
 
                 // save data
@@ -663,7 +665,7 @@ async function main() {
             const owner: string = param.args[1] as string;
 
             console.log(
-              `[SeeDAORegistrarController.NameRegistered] Event: ${name} ${owner} ${param.blockNumber} ${param.tx}`,
+              `[SeeDAORegistrarController.NameRegistered] Event: ${name} ${owner} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
             );
 
             // check if the event has been handled
@@ -774,7 +776,7 @@ async function main() {
             const tokenId: string = param.args[2].toString();
 
             console.log(
-              `[BaseRegistrar.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx}`,
+              `[BaseRegistrar.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
             );
 
             // check if the event has been handled
@@ -885,13 +887,18 @@ async function main() {
   app.get("/sns/all", snsAPI.all);
   app.get("/sns/by_token_id/:tokenId", snsAPI.byTokenId);
   app.get("/sns/by_name", snsAPI.byName);
-  // sns snapshot apis
-  app.get("/sns/snapshot/:timestamp", snsSnapshotAPI.snapshot);
   // sns metadata apis
   app.get("/metadata/:tokenId", snsMetadataAPI.metadata);
   app.get("/metadata/:tokenId/image", snsMetadataAPI.image);
-  // erc721 apis
-  app.get("/erc721/snapshot/:contract/:timestamp", erc721SnapshotAPI.snapshot);
+
+  // snapshot apis
+  app.get("/snapshot/erc20/:contract/:timestamp", erc20SnapshotAPI.snapshot);
+  app.get("/snapshot/erc721/:contract/:timestamp", erc721SnapshotAPI.snapshot);
+  app.get(
+    "/snapshot/erc1155/:contract/:timestamp",
+    erc1155SnapshotAPI.snapshot,
+  );
+  app.get("/snapshot/sns/:timestamp", snsSnapshotAPI.snapshot);
 
   // insight apis
   app.get(

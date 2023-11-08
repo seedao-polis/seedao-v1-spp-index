@@ -6,7 +6,7 @@ export namespace ERC721TokenService {
     client: PrismaClient,
     data: Prisma.ERC721TokenCreateInput,
   ): Promise<ERC721Token> {
-    return client.eRC721Token.create({
+    return await client.eRC721Token.create({
       data: data,
     });
   }
@@ -16,7 +16,7 @@ export namespace ERC721TokenService {
     contractAddress: string,
     tokenId: string,
   ) {
-    client.eRC721Token.delete({
+    await client.eRC721Token.delete({
       where: { contractAddress, tokenId },
     });
   }
@@ -28,19 +28,9 @@ export namespace ERC721TokenService {
     newOwner: string,
     timestamp: number,
   ) {
-    client.eRC721Token.update({
+    await client.eRC721Token.update({
       where: { contractAddress, tokenId },
       data: { owner: newOwner, timestamp: timestamp },
-    });
-  }
-
-  export async function getBeforeTimestamp(
-    client: PrismaClient,
-    contractAddress: string,
-    timestamp: number,
-  ): Promise<ERC721Token[]> {
-    return client.eRC721Token.findMany({
-      where: { contractAddress, timestamp: { lte: timestamp } },
     });
   }
 
@@ -64,7 +54,7 @@ export namespace ERC721TokenTransferTxService {
     client: PrismaClient,
     data: Prisma.ERC721TokenTransferTxCreateInput,
   ): Promise<ERC721TokenTransferTx> {
-    return client.eRC721TokenTransferTx.create({
+    return await client.eRC721TokenTransferTx.create({
       data: data,
     });
   }
@@ -92,8 +82,21 @@ export namespace ERC721TokenTransferTxService {
     paramTokenId: string,
     handler: string,
   ): Promise<ERC721TokenTransferTx | null> {
-    return client.eRC721TokenTransferTx.findFirst({
+    return await client.eRC721TokenTransferTx.findFirst({
       where: { contractAddress, tx, paramTo, paramFrom, paramTokenId, handler },
+    });
+  }
+
+  export async function getBeforeTimestamp(
+    client: PrismaClient,
+    contractAddress: string,
+    timestamp: number,
+  ): Promise<ERC721TokenTransferTx[]> {
+    return await client.eRC721TokenTransferTx.findMany({
+      where: { contractAddress, timestamp: { lte: timestamp } },
+      orderBy: {
+        id: "asc",
+      },
     });
   }
 }

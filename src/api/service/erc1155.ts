@@ -11,7 +11,7 @@ export namespace ERC1155TokenService {
     client: PrismaClient,
     data: Prisma.ERC1155TokenCreateInput,
   ): Promise<ERC1155Token> {
-    return client.eRC1155Token.create({
+    return await client.eRC1155Token.create({
       data: data,
     });
   }
@@ -22,7 +22,7 @@ export namespace ERC1155TokenService {
     tokenId: string,
     owner: string,
   ): Promise<ERC1155Token | null> {
-    return client.eRC1155Token.findFirst({
+    return await client.eRC1155Token.findFirst({
       where: {
         contractAddress,
         tokenId,
@@ -50,7 +50,7 @@ export namespace ERC1155TokenService {
         `ERC1155TokenService.incrementValueByTokenId: row not found [contract: ${contractAddress} tokenId: ${tokenId} owner: ${owner}]`,
       );
     } else {
-      client.eRC1155Token.updateMany({
+      await client.eRC1155Token.updateMany({
         where: {
           contractAddress,
           tokenId,
@@ -80,7 +80,7 @@ export namespace ERC1155TokenService {
         `ERC1155TokenService.decrementValueByTokenId: row not found [contract: ${contractAddress} tokenId: ${tokenId} owner: ${owner}]`,
       );
     } else {
-      client.eRC1155Token.updateMany({
+      await client.eRC1155Token.updateMany({
         where: {
           contractAddress,
           tokenId,
@@ -126,7 +126,7 @@ export namespace ERC1155TokenTransferSingleTxService {
     client: PrismaClient,
     data: Prisma.ERC1155TokenTransferSingleTxCreateInput,
   ): Promise<ERC1155TokenTransferSingleTx> {
-    return client.eRC1155TokenTransferSingleTx.create({
+    return await client.eRC1155TokenTransferSingleTx.create({
       data: data,
     });
   }
@@ -154,8 +154,21 @@ export namespace ERC1155TokenTransferSingleTxService {
     paramId: string,
     handler: string,
   ): Promise<ERC1155TokenTransferSingleTx | null> {
-    return client.eRC1155TokenTransferSingleTx.findFirst({
+    return await client.eRC1155TokenTransferSingleTx.findFirst({
       where: { contractAddress, tx, paramFrom, paramTo, paramId, handler },
+    });
+  }
+
+  export async function getBeforeTimestamp(
+    client: PrismaClient,
+    contractAddress: string,
+    timestamp: number,
+  ): Promise<ERC1155TokenTransferSingleTx[]> {
+    return await client.eRC1155TokenTransferSingleTx.findMany({
+      where: { contractAddress, timestamp: { lte: timestamp } },
+      orderBy: {
+        id: "asc",
+      },
     });
   }
 }
@@ -165,7 +178,7 @@ export namespace ERC1155TokenTransferBatchTxService {
     client: PrismaClient,
     data: Prisma.ERC1155TokenTransferBatchTxCreateInput,
   ): Promise<ERC1155TokenTransferBatchTx> {
-    return client.eRC1155TokenTransferBatchTx.create({
+    return await client.eRC1155TokenTransferBatchTx.create({
       data: data,
     });
   }
@@ -192,8 +205,21 @@ export namespace ERC1155TokenTransferBatchTxService {
     paramTo: string,
     handler: string,
   ): Promise<ERC1155TokenTransferBatchTx | null> {
-    return client.eRC1155TokenTransferBatchTx.findFirst({
+    return await client.eRC1155TokenTransferBatchTx.findFirst({
       where: { contractAddress, tx, paramFrom, paramTo, handler },
+    });
+  }
+
+  export async function getBeforeTimestamp(
+    client: PrismaClient,
+    contractAddress: string,
+    timestamp: number,
+  ): Promise<ERC1155TokenTransferBatchTx[]> {
+    return await client.eRC1155TokenTransferBatchTx.findMany({
+      where: { contractAddress, timestamp: { lte: timestamp } },
+      orderBy: {
+        id: "asc",
+      },
     });
   }
 }
