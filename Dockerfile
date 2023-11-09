@@ -28,6 +28,7 @@ WORKDIR /app
 
 # Copy the built application files from the previous stage
 COPY --from=BUILD /app/dist ./dist
+COPY --from=BUILD /app/conf.json ./
 COPY --from=BUILD /app/prisma ./prisma
 COPY --from=BUILD /app/package*.json ./
 COPY --from=BUILD /app/yarn.lock ./
