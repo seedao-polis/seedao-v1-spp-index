@@ -1,0 +1,9 @@
+select setval('public."ERC20Token_id_seq"', (select max(id) from public."ERC20Token"));
+select setval('public."ERC20TokenTransferTx_id_seq"', (select max(id) from public."ERC20TokenTransferTx"));
+select setval('public."ERC721Token_id_seq"', (select max(id) from public."ERC721Token"));
+select setval('public."ERC721TokenTransferTx_id_seq"', (select max(id) from public."ERC721TokenTransferTx"));
+select setval('public."ERC1155Token_id_seq"', (select max(id) from public."ERC1155Token"));
+select setval('public."ERC1155TokenTransferBatchTx_id_seq"', (select max(id) from public."ERC1155TokenTransferBatchTx"));
+select setval('public."ERC1155TokenTransferSingleTx_id_seq"', (select max(id) from public."ERC1155TokenTransferSingleTx"));
+select setval('public."SNS_id_seq"', (select max(id) from public."SNS"));
+select setval('public."SNSNameregisteredTx_id_seq"', (select max(id) from public."SNSNameregisteredTx"));
