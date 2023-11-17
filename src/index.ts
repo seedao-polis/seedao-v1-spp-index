@@ -36,6 +36,7 @@ import { snsSnapshotAPI } from "./api/sns_snapshot";
 import { erc721SnapshotAPI } from "./api/erc721_snapshot";
 import { erc20SnapshotAPI } from "./api/erc20_snapshot";
 import { erc1155SnapshotAPI } from "./api/erc1155_snapshot";
+import { seedImageAPI } from "./api/seed_image";
 
 interface ContractConf {
   name: string;
@@ -890,6 +891,8 @@ async function main() {
   // sns metadata apis
   app.get("/metadata/:tokenId", snsMetadataAPI.metadata);
   app.get("/metadata/:tokenId/image", snsMetadataAPI.image);
+  // seed apis
+  app.get("/seed/images", seedImageAPI.images);
 
   // snapshot apis
   app.get("/snapshot/erc20/:contract/:timestamp", erc20SnapshotAPI.snapshot);
