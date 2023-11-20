@@ -74,16 +74,30 @@
       "sns": {
         "snsSeeDAORegistrarController": {
           "_comment": "not a ERC standard",
-          "addr": "0x6C679D0ca8C6e3692Ca033fab499242A94C257C2",
-          "chainRPC": "https://eth-sepolia.g.alchemy.com/v2/H43zK7UnIN2v7u2ZoTbizIPnXkylKIZl"
+          "addr": ""
         },
         "snsBaseRegistrar": {
           "_comment": "is ERC721",
-          "addr": "0x6C679D0ca8C6e3692Ca033fab499242A94C257C2",
-          "chainRPC": "https://eth-sepolia.g.alchemy.com/v2/H43zK7UnIN2v7u2ZoTbizIPnXkylKIZl"
+          "addr": ""
         },
+        "chainRPC": "https://eth-sepolia.g.alchemy.com/v2/H43zK7UnIN2v7u2ZoTbizIPnXkylKIZl",
         "webhooks": {
           "TransferEvent": [
+            "https://httpdump.app/dumps/b3c3304d-f35f-42e0-8999-0564d5244b82"
+          ]
+        }
+      },
+      "sns_resolver": {
+        "PublicResolver": {
+          "_comment": "not a ERC standard, need handle AddrChanged and NameChanged events",
+          "addr": ""
+        },
+        "chainRPC": "http://127.0.0.1:8545/",
+        "webhooks": {
+          "AddrChanged": [
+            "https://httpdump.app/dumps/b3c3304d-f35f-42e0-8999-0564d5244b82"
+          ],
+          "NameChanged": [
             "https://httpdump.app/dumps/b3c3304d-f35f-42e0-8999-0564d5244b82"
           ]
         }

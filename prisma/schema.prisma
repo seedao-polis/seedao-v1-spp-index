@@ -109,3 +109,37 @@ model SNSNameregisteredTx {
 }
 
 // SNSTransferTx saved at 'ERC721TokenTransferTx' table
+
+model SNSAddressResolver {
+  id      Int    @id @default(autoincrement())
+  name    String @unique
+  address String
+}
+
+model SNSResolverAddrChangedTx {
+  id          Int    @id @default(autoincrement())
+  tx          String
+  blockNumber Int
+  timestamp   Int
+  handler     String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
+  paramNode   String
+  paramName   String
+  paramA      String
+}
+
+model SNSNameResolver {
+  id      Int    @id @default(autoincrement())
+  address String @unique
+  name    String
+}
+
+model SNSResolverNameChangedTx {
+  id          Int    @id @default(autoincrement())
+  tx          String
+  blockNumber Int
+  timestamp   Int
+  handler     String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
+  paramNode   String
+  paramA      String
+  paramName   String
+}
