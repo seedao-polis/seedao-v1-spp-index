@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { PrismaClient, Prisma } from "@prisma/client";
 import { snsAPI } from "./api/sns";
 import { snsMetadataAPI } from "./api/sns_metadata";
@@ -1096,6 +1097,7 @@ async function main() {
   const app = express();
 
   // middleware
+  app.use(cors());
   app.use(express.json());
   app.use((req: Request, resp: Response, next: NextFunction) => {
     resp.locals.client = client;
