@@ -33,7 +33,7 @@ export namespace snsResolverAPI {
     const t: Map<string, string> = new Map();
     r.forEach((v) => t.set(v.node, v.address));
     const result: string[] = [];
-    nodes.forEach((v) => result.push(t.get(v) ?? ""));
+    nodes.forEach((v) => result.push(t.get(v) ?? "0x0000000000000000000000000000000000000000"));
 
     resp.json(result);
   }
