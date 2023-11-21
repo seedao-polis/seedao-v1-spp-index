@@ -877,7 +877,7 @@ async function main() {
       addr: resolverConf.PublicResolver.addr,
       fromBlock:
         await SNSResolverAddrChangedTxService.getLatestBlockNumber(client),
-      abi: ["event AddrChanged(bytes32 indexed node, string name, address a)"],
+      abi: ["event AddrChanged(bytes32 indexed node, address a)"],
       chainRPC: resolverConf.chainRPC,
       events: ["AddrChanged"],
       callbacks: [
@@ -889,19 +889,18 @@ async function main() {
               tx: string;
             };
             parameters: {
-              name: string;
+              node: string;
               address: string;
             };
           }[] = [];
 
           for (const param of params) {
-            // [[node, name, address], , ]
+            // [[node, address], , ]
             const node: string = param.args[0] as string;
-            const name: string = (param.args[1] as string) + ".seedao";
-            const address: string = param.args[2] as string;
+            const address: string = param.args[1] as string;
 
             console.log(
-              `[PublicResolver.AddrChanged] Event: ${name} ${address} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
+              `[PublicResolver.AddrChanged] Event: ${node} ${address} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
             );
 
             // check if the event has been handled
@@ -909,7 +908,7 @@ async function main() {
               await SNSResolverAddrChangedTxService.getByTxAndHandler(
                 client,
                 param.tx,
-                name,
+                node,
                 address,
                 toggle(handler), // when executing `query`, checking if the event has been handled by `on`, and vice versa
               );
@@ -921,23 +920,22 @@ async function main() {
                 timestamp: param.timestamp,
                 handler: handler,
                 paramNode: node,
-                paramName: name,
                 paramA: address,
               });
 
               // save data
               if (
-                (await SNSAddressResolverService.getByName(client, name)) ==
+                (await SNSAddressResolverService.getByNode(client, node)) ==
                 null
               ) {
                 await SNSAddressResolverService.create(client, {
-                  name: name,
+                  node: node,
                   address: address,
                 });
               } else {
-                await SNSAddressResolverService.updateByName(
+                await SNSAddressResolverService.updateByNode(
                   client,
-                  name,
+                  node,
                   address,
                 );
               }
@@ -950,13 +948,13 @@ async function main() {
                   tx: param.tx,
                 },
                 parameters: {
-                  name,
+                  node,
                   address,
                 },
               });
             } else {
               console.log(
-                `[PublicResolver.AddrChanged] Event: ${name} ${address} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+                `[PublicResolver.AddrChanged] Event: ${node} ${address} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
               );
             }
           }
@@ -984,7 +982,7 @@ async function main() {
       addr: resolverConf.PublicResolver.addr,
       fromBlock:
         await SNSResolverNameChangedTxService.getLatestBlockNumber(client),
-      abi: ["event NameChanged(bytes32 indexed node, address a, string name)"],
+      abi: ["event NameChanged(bytes32 indexed node, string name)"],
       chainRPC: resolverConf.chainRPC,
       events: ["NameChanged"],
       callbacks: [
@@ -996,19 +994,18 @@ async function main() {
               tx: string;
             };
             parameters: {
-              address: string;
+              node: string;
               name: string;
             };
           }[] = [];
 
           for (const param of params) {
-            // [[node, address, name], , ]
+            // [[node, name], , ]
             const node: string = param.args[0] as string;
-            const address: string = param.args[1] as string;
-            const name: string = param.args[2] as string;
+            const name: string = param.args[1] as string;
 
             console.log(
-              `[PublicResolver.NameChanged] Event: ${address} ${name} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
+              `[PublicResolver.NameChanged] Event: ${node} ${name} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
             );
 
             // check if the event has been handled
@@ -1016,7 +1013,7 @@ async function main() {
               await SNSResolverNameChangedTxService.getByTxAndHandler(
                 client,
                 param.tx,
-                address,
+                node,
                 name,
                 toggle(handler), // when executing `query`, checking if the event has been handled by `on`, and vice versa
               );
@@ -1028,25 +1025,19 @@ async function main() {
                 timestamp: param.timestamp,
                 handler: handler,
                 paramNode: node,
-                paramA: address,
                 paramName: name,
               });
 
               // save data
               if (
-                (await SNSNameResolverService.getByAddress(client, address)) ==
-                null
+                (await SNSNameResolverService.getByNode(client, node)) == null
               ) {
                 await SNSNameResolverService.create(client, {
-                  address: address,
+                  node: node,
                   name: name,
                 });
               } else {
-                await SNSNameResolverService.updateByAddress(
-                  client,
-                  address,
-                  name,
-                );
+                await SNSNameResolverService.updateByNode(client, node, name);
               }
 
               // add to unHandleEvents
@@ -1057,13 +1048,13 @@ async function main() {
                   tx: param.tx,
                 },
                 parameters: {
-                  address,
+                  node,
                   name,
                 },
               });
             } else {
               console.log(
-                `[PublicResolver.NameChanged] Event: ${address} ${name} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+                `[PublicResolver.NameChanged] Event: ${node} ${name} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
               );
             }
           }

@@ -112,7 +112,7 @@ model SNSNameregisteredTx {
 
 model SNSAddressResolver {
   id      Int    @id @default(autoincrement())
-  name    String @unique
+  node    String @unique
   address String
 }
 
@@ -123,14 +123,13 @@ model SNSResolverAddrChangedTx {
   timestamp   Int
   handler     String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
   paramNode   String
-  paramName   String
   paramA      String
 }
 
 model SNSNameResolver {
-  id      Int    @id @default(autoincrement())
-  address String @unique
-  name    String
+  id   Int    @id @default(autoincrement())
+  node String @unique
+  name String
 }
 
 model SNSResolverNameChangedTx {
@@ -140,6 +139,5 @@ model SNSResolverNameChangedTx {
   timestamp   Int
   handler     String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
   paramNode   String
-  paramA      String
   paramName   String
 }

@@ -17,30 +17,30 @@ export namespace SNSAddressResolverService {
     });
   }
 
-  export async function updateByName(
+  export async function updateByNode(
     client: PrismaClient,
-    name: string,
+    node: string,
     newAddress: string,
   ): Promise<SNSAddressResolver> {
     return await client.sNSAddressResolver.update({
-      where: { name },
+      where: { node },
       data: { address: newAddress },
     });
   }
 
-  export async function getByName(
+  export async function getByNode(
     client: PrismaClient,
-    name: string,
+    node: string,
   ): Promise<SNSAddressResolver | null> {
-    return await client.sNSAddressResolver.findUnique({ where: { name } });
+    return await client.sNSAddressResolver.findUnique({ where: { node } });
   }
 
-  export async function getByNames(
+  export async function getByNodes(
     client: PrismaClient,
-    names: string[],
+    nodes: string[],
   ): Promise<SNSAddressResolver[]> {
     return await client.sNSAddressResolver.findMany({
-      where: { name: { in: names } },
+      where: { node: { in: nodes } },
     });
   }
 }
@@ -70,12 +70,12 @@ export namespace SNSResolverAddrChangedTxService {
   export async function getByTxAndHandler(
     client: PrismaClient,
     tx: string,
-    paramName: string,
+    paramNode: string,
     paramA: string,
     handler: string,
   ): Promise<SNSResolverAddrChangedTx | null> {
     return await client.sNSResolverAddrChangedTx.findFirst({
-      where: { tx, paramName, paramA, handler },
+      where: { tx, paramNode, paramA, handler },
     });
   }
 }
@@ -93,30 +93,30 @@ export namespace SNSNameResolverService {
     });
   }
 
-  export async function updateByAddress(
+  export async function updateByNode(
     client: PrismaClient,
-    address: string,
+    node: string,
     newName: string,
   ): Promise<SNSNameResolver> {
     return await client.sNSNameResolver.update({
-      where: { address },
+      where: { node },
       data: { name: newName },
     });
   }
 
-  export async function getByAddress(
+  export async function getByNode(
     client: PrismaClient,
-    address: string,
+    node: string,
   ): Promise<SNSNameResolver | null> {
-    return await client.sNSNameResolver.findUnique({ where: { address } });
+    return await client.sNSNameResolver.findUnique({ where: { node } });
   }
 
-  export async function getByAddresses(
+  export async function getByNodes(
     client: PrismaClient,
-    addresses: string[],
+    nodes: string[],
   ): Promise<SNSNameResolver[]> {
     return await client.sNSNameResolver.findMany({
-      where: { address: { in: addresses } },
+      where: { node: { in: nodes } },
     });
   }
 }
@@ -146,12 +146,12 @@ export namespace SNSResolverNameChangedTxService {
   export async function getByTxAndHandler(
     client: PrismaClient,
     tx: string,
-    paramA: string,
+    paramNode: string,
     paramName: string,
     handler: string,
   ): Promise<SNSResolverNameChangedTx | null> {
     return await client.sNSResolverNameChangedTx.findFirst({
-      where: { tx, paramA, paramName, handler },
+      where: { tx, paramNode, paramName, handler },
     });
   }
 }

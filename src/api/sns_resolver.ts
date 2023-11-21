@@ -6,14 +6,14 @@ import {
 import { PrismaClient } from "@prisma/client";
 
 export namespace snsResolverAPI {
-  // `/resolver/get_address?name=abc.seedao`
+  // `/resolver/get_address?node=namehash(abc.seedao)`
   export async function address(req: Request, resp: Response) {
-    const name: string = req.query.name as string;
+    const node: string = req.query.node as string;
 
     // don't handle normalize
 
     const client: PrismaClient = resp.locals.client;
-    const r = await SNSAddressResolverService.getByName(client, name);
+    const r = await SNSAddressResolverService.getByNode(client, node);
     if (r == null) {
       resp.status(404).json({ error: "Resolver not found" });
       return;
@@ -25,25 +25,25 @@ export namespace snsResolverAPI {
 
   // `/resolver/get_addresses`
   export async function addresses(req: Request, resp: Response) {
-    const names: string[] = req.body;
+    const nodes: string[] = req.body; // all item are `namehash(YOUR_NAME.seedao)`
 
     const client: PrismaClient = resp.locals.client;
-    const r = await SNSAddressResolverService.getByNames(client, names);
+    const r = await SNSAddressResolverService.getByNodes(client, nodes);
 
     const t: Map<string, string> = new Map();
-    r.forEach((v) => t.set(v.name, v.address));
+    r.forEach((v) => t.set(v.node, v.address));
     const result: string[] = [];
-    names.forEach((v) => result.push(t.get(v) ?? ""));
+    nodes.forEach((v) => result.push(t.get(v) ?? ""));
 
     resp.json(result);
   }
 
-  // `/resolver/get_name?address=0x123`
+  // `/resolver/get_name?node=namehash(0x123.addr.reverse)`
   export async function name(req: Request, resp: Response) {
-    const address: string = req.query.address as string;
+    const node: string = req.query.node as string;
 
     const client: PrismaClient = resp.locals.client;
-    const r = await SNSNameResolverService.getByAddress(client, address);
+    const r = await SNSNameResolverService.getByNode(client, node);
     if (r == null) {
       resp.status(404).json({ error: "Resolver not found" });
       return;
@@ -55,15 +55,15 @@ export namespace snsResolverAPI {
 
   // `/resolver/get_names`
   export async function names(req: Request, resp: Response) {
-    const addresses: string[] = req.body;
+    const nodes: string[] = req.body; // all item are `namehash(YOUR_ADDR.addr.reverse)`
 
     const client: PrismaClient = resp.locals.client;
-    const r = await SNSNameResolverService.getByAddresses(client, addresses);
+    const r = await SNSNameResolverService.getByNodes(client, nodes);
 
     const t: Map<string, string> = new Map();
-    r.forEach((v) => t.set(v.address, v.name));
+    r.forEach((v) => t.set(v.node, v.name));
     const result: string[] = [];
-    addresses.forEach((v) => result.push(t.get(v) ?? ""));
+    nodes.forEach((v) => result.push(t.get(v) ?? ""));
 
     resp.json(result);
   }
