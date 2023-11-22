@@ -14,13 +14,11 @@ export namespace snsResolverAPI {
 
     const client: PrismaClient = resp.locals.client;
     const r = await SNSAddressResolverService.getByNode(client, node);
-    if (r == null) {
-      resp.status(404).json({ error: "Resolver not found" });
-      return;
-    }
 
     resp.set("Content-Type", "text/plain; charset=utf-8");
-    resp.send(r.address);
+    resp.send(
+      r == null ? "0x0000000000000000000000000000000000000000" : r.address,
+    );
   }
 
   // `/resolver/get_addresses`
@@ -33,7 +31,9 @@ export namespace snsResolverAPI {
     const t: Map<string, string> = new Map();
     r.forEach((v) => t.set(v.node, v.address));
     const result: string[] = [];
-    nodes.forEach((v) => result.push(t.get(v) ?? "0x0000000000000000000000000000000000000000"));
+    nodes.forEach((v) =>
+      result.push(t.get(v) ?? "0x0000000000000000000000000000000000000000"),
+    );
 
     resp.json(result);
   }
@@ -44,13 +44,9 @@ export namespace snsResolverAPI {
 
     const client: PrismaClient = resp.locals.client;
     const r = await SNSNameResolverService.getByNode(client, node);
-    if (r == null) {
-      resp.status(404).json({ error: "Resolver not found" });
-      return;
-    }
 
     resp.set("Content-Type", "text/plain; charset=utf-8");
-    resp.send(r.name);
+    resp.send(r == null ? "" : r.name);
   }
 
   // `/resolver/get_names`
