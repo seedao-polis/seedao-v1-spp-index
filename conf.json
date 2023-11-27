@@ -74,7 +74,7 @@
       "sns": {
         "snsSeeDAORegistrarController": {
           "_comment": "not a ERC standard",
-          "addr": "0x6C679D0ca8C6e3692Ca033fab499242A94C257C2"
+          "addr": "0xded0a911F095349A071CA71Bb8237C4a40947159"
         },
         "snsBaseRegistrar": {
           "_comment": "is ERC721",
