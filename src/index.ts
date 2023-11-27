@@ -1105,6 +1105,7 @@ async function main() {
   });
   // sns apis
   app.get("/sns/all", snsAPI.all);
+  app.get("/sns/list_by_wallet/:wallet", snsAPI.listByWallet);
   app.get("/sns/by_token_id/:tokenId", snsAPI.byTokenId);
   app.get("/sns/by_name", snsAPI.byName);
   app.get("/sns/resolver/get_address", snsResolverAPI.address);
