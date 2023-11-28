@@ -142,7 +142,7 @@ export async function subscribeNewEvents(contract: Contract) {
       await contract.callbacks[i](
         [
           {
-            args: [args.slice(0, args.length - 1)],
+            args: [args.slice(0, args.length - 1)][0],
             blockNumber: blockNumber,
             tx: tx,
             timestamp: timestamp,
