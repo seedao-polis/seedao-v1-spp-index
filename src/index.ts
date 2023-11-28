@@ -2,7 +2,6 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { PrismaClient, Prisma } from "@prisma/client";
 import { snsAPI } from "./api/sns";
-import { snsMetadataAPI } from "./api/sns_metadata";
 import {
   Contract,
   queryHistoryEvents,
@@ -1112,9 +1111,6 @@ async function main() {
   app.post("/sns/resolver/get_addresses", snsResolverAPI.addresses);
   app.get("/sns/resolver/get_name", snsResolverAPI.name);
   app.post("/sns/resolver/get_names", snsResolverAPI.names);
-  // sns metadata apis
-  app.get("/metadata/:tokenId", snsMetadataAPI.metadata);
-  app.get("/metadata/:tokenId/image", snsMetadataAPI.image);
   // seed apis
   app.get("/seed/images", seedImageAPI.images);
 
