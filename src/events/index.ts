@@ -133,7 +133,9 @@ export async function subscribeNewEvents(contract: Contract) {
       //   `${contract.name}'s New ${contract.events[i]} Event: ${args}`,
       // );
       console.log(
-        `----- execute [NEW] ${contract.name}'s callback[${i}] -----`,
+        `----- execute [NEW] ${
+          contract.name
+        }'s callback[${i}] (${new Date().toString()}) -----`,
       );
       const blockNumber = args[args.length - 1].log.blockNumber;
       const tx = args[args.length - 1].log.transactionHash;

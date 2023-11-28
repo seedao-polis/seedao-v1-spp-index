@@ -26,11 +26,13 @@ async function main() {
     values.set(Number(key), value.trim());
   }
 
-  const result = keys.sort((n1,n2) => n1 - n2);
+  const result = keys.sort((n1, n2) => n1 - n2);
   console.log(result);
 
   for (const k of result) {
-    fs.writeFileSync(output, `${k}:${values.get(k) as string}\n`, { flag: "a+" });
+    fs.writeFileSync(output, `${k}:${values.get(k) as string}\n`, {
+      flag: "a+",
+    });
   }
 }
 
