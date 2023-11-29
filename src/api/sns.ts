@@ -9,6 +9,21 @@ export namespace snsAPI {
     resp.json({});
   }
 
+  // `/sns/list_by_wallet/:wallet`
+  export async function listByWallet(req: Request, resp: Response) {
+    const wallet: string = req.params.wallet;
+
+    const client: PrismaClient = resp.locals.client;
+    const snsList = await client.sNS.findMany({ where: { owner: wallet } });
+
+    if (snsList == null) {
+      resp.status(404).json({ error: "SNS not found" });
+      return;
+    }
+
+    resp.json(snsList);
+  }
+
   // `/sns/by_name?name=abc.seedao`
   export async function byName(req: Request, resp: Response) {
     const name: string = req.query.name as string;

@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { PrismaClient, Prisma } from "@prisma/client";
 import { snsAPI } from "./api/sns";
-import { snsMetadataAPI } from "./api/sns_metadata";
 import {
   Contract,
   queryHistoryEvents,
@@ -36,6 +36,14 @@ import { snsSnapshotAPI } from "./api/sns_snapshot";
 import { erc721SnapshotAPI } from "./api/erc721_snapshot";
 import { erc20SnapshotAPI } from "./api/erc20_snapshot";
 import { erc1155SnapshotAPI } from "./api/erc1155_snapshot";
+import { seedImageAPI } from "./api/seed_image";
+import {
+  SNSAddressResolverService,
+  SNSNameResolverService,
+  SNSResolverAddrChangedTxService,
+  SNSResolverNameChangedTxService,
+} from "./api/service/sns_resolver";
+import { snsResolverAPI } from "./api/sns_resolver";
 
 interface ContractConf {
   name: string;
@@ -641,7 +649,7 @@ async function main() {
       addr: snsConf.snsSeeDAORegistrarController.addr,
       fromBlock: await SNSNameregisteredTxService.getLatestBlockNumber(client),
       abi: ["event NameRegistered(string name, address owner)"],
-      chainRPC: snsConf.snsSeeDAORegistrarController.chainRPC,
+      chainRPC: snsConf.chainRPC,
       events: ["NameRegistered"],
       callbacks: [
         async (params, handler) => {
@@ -751,7 +759,7 @@ async function main() {
       abi: [
         "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
       ],
-      chainRPC: snsConf.snsBaseRegistrar.chainRPC,
+      chainRPC: snsConf.chainRPC,
       events: ["Transfer"],
       callbacks: [
         async (params, handler) => {
@@ -862,6 +870,214 @@ async function main() {
       ],
     },
   ];
+  const resolverConf = conf.contracts.NO_ERC_STD.sns_resolver;
+  const snsResolver: Contract[] = [
+    {
+      name: "PublicResolver_AddrChanged",
+      addr: resolverConf.PublicResolver.addr,
+      fromBlock:
+        await SNSResolverAddrChangedTxService.getLatestBlockNumber(client),
+      abi: ["event AddrChanged(bytes32 indexed node, address a)"],
+      chainRPC: resolverConf.chainRPC,
+      events: ["AddrChanged"],
+      callbacks: [
+        async (params, handler) => {
+          const unHandleEvents: {
+            metadata: {
+              blockNumber: number;
+              timestamp: number;
+              tx: string;
+            };
+            parameters: {
+              node: string;
+              address: string;
+            };
+          }[] = [];
+
+          for (const param of params) {
+            // [[node, address], , ]
+            const node: string = param.args[0] as string;
+            const address: string = param.args[1] as string;
+
+            console.log(
+              `[PublicResolver.AddrChanged] Event: ${node} ${address} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
+            );
+
+            // check if the event has been handled
+            const transferTx =
+              await SNSResolverAddrChangedTxService.getByTxAndHandler(
+                client,
+                param.tx,
+                node,
+                address,
+                toggle(handler), // when executing `query`, checking if the event has been handled by `on`, and vice versa
+              );
+            if (transferTx == null) {
+              // save tx
+              await SNSResolverAddrChangedTxService.create(client, {
+                tx: param.tx,
+                blockNumber: param.blockNumber,
+                timestamp: param.timestamp,
+                handler: handler,
+                paramNode: node,
+                paramA: address,
+              });
+
+              // save data
+              if (
+                (await SNSAddressResolverService.getByNode(client, node)) ==
+                null
+              ) {
+                await SNSAddressResolverService.create(client, {
+                  node: node,
+                  address: address,
+                });
+              } else {
+                await SNSAddressResolverService.updateByNode(
+                  client,
+                  node,
+                  address,
+                );
+              }
+
+              // add to unHandleEvents
+              unHandleEvents.push({
+                metadata: {
+                  blockNumber: param.blockNumber,
+                  timestamp: param.timestamp,
+                  tx: param.tx,
+                },
+                parameters: {
+                  node,
+                  address,
+                },
+              });
+            } else {
+              console.log(
+                `[PublicResolver.AddrChanged] Event: ${node} ${address} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+              );
+            }
+          }
+
+          // send webhook
+          if (
+            unHandleEvents.length != 0 &&
+            resolverConf.webhooks.AddrChanged.length != 0
+          ) {
+            await sendWebhook(
+              {
+                contractName: "PublicResolver",
+                contractAddress: resolverConf.PublicResolver.addr,
+                event: "AddrChanged",
+                data: unHandleEvents,
+              },
+              resolverConf.webhooks.AddrChanged,
+            );
+          }
+        },
+      ],
+    },
+    {
+      name: "PublicResolver_NameChanged",
+      addr: resolverConf.PublicResolver.addr,
+      fromBlock:
+        await SNSResolverNameChangedTxService.getLatestBlockNumber(client),
+      abi: ["event NameChanged(bytes32 indexed node, string name)"],
+      chainRPC: resolverConf.chainRPC,
+      events: ["NameChanged"],
+      callbacks: [
+        async (params, handler) => {
+          const unHandleEvents: {
+            metadata: {
+              blockNumber: number;
+              timestamp: number;
+              tx: string;
+            };
+            parameters: {
+              node: string;
+              name: string;
+            };
+          }[] = [];
+
+          for (const param of params) {
+            // [[node, name], , ]
+            const node: string = param.args[0] as string;
+            const name: string = param.args[1] as string;
+
+            console.log(
+              `[PublicResolver.NameChanged] Event: ${node} ${name} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
+            );
+
+            // check if the event has been handled
+            const transferTx =
+              await SNSResolverNameChangedTxService.getByTxAndHandler(
+                client,
+                param.tx,
+                node,
+                name,
+                toggle(handler), // when executing `query`, checking if the event has been handled by `on`, and vice versa
+              );
+            if (transferTx == null) {
+              // save tx
+              await SNSResolverNameChangedTxService.create(client, {
+                tx: param.tx,
+                blockNumber: param.blockNumber,
+                timestamp: param.timestamp,
+                handler: handler,
+                paramNode: node,
+                paramName: name,
+              });
+
+              // save data
+              if (
+                (await SNSNameResolverService.getByNode(client, node)) == null
+              ) {
+                await SNSNameResolverService.create(client, {
+                  node: node,
+                  name: name,
+                });
+              } else {
+                await SNSNameResolverService.updateByNode(client, node, name);
+              }
+
+              // add to unHandleEvents
+              unHandleEvents.push({
+                metadata: {
+                  blockNumber: param.blockNumber,
+                  timestamp: param.timestamp,
+                  tx: param.tx,
+                },
+                parameters: {
+                  node,
+                  name,
+                },
+              });
+            } else {
+              console.log(
+                `[PublicResolver.NameChanged] Event: ${node} ${name} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+              );
+            }
+          }
+
+          // send webhook
+          if (
+            unHandleEvents.length != 0 &&
+            resolverConf.webhooks.NameChanged.length != 0
+          ) {
+            await sendWebhook(
+              {
+                contractName: "PublicResolver",
+                contractAddress: resolverConf.PublicResolver.addr,
+                event: "NameChanged",
+                data: unHandleEvents,
+              },
+              resolverConf.webhooks.NameChanged,
+            );
+          }
+        },
+      ],
+    },
+  ];
 
   // subscribe events first, and then query history events
   const contracts = [
@@ -869,6 +1085,7 @@ async function main() {
     ...ERC721Contracts,
     ...ERC1155Contracts,
     ...SNSContracts,
+    ...snsResolver,
   ];
   for (const contract of contracts) {
     await subscribeNewEvents(contract);
@@ -879,17 +1096,23 @@ async function main() {
   const app = express();
 
   // middleware
+  app.use(cors());
+  app.use(express.json());
   app.use((req: Request, resp: Response, next: NextFunction) => {
     resp.locals.client = client;
     next();
   });
   // sns apis
   app.get("/sns/all", snsAPI.all);
+  app.get("/sns/list_by_wallet/:wallet", snsAPI.listByWallet);
   app.get("/sns/by_token_id/:tokenId", snsAPI.byTokenId);
   app.get("/sns/by_name", snsAPI.byName);
-  // sns metadata apis
-  app.get("/metadata/:tokenId", snsMetadataAPI.metadata);
-  app.get("/metadata/:tokenId/image", snsMetadataAPI.image);
+  app.get("/sns/resolver/get_address", snsResolverAPI.address);
+  app.post("/sns/resolver/get_addresses", snsResolverAPI.addresses);
+  app.get("/sns/resolver/get_name", snsResolverAPI.name);
+  app.post("/sns/resolver/get_names", snsResolverAPI.names);
+  // seed apis
+  app.get("/seed/images", seedImageAPI.images);
 
   // snapshot apis
   app.get("/snapshot/erc20/:contract/:timestamp", erc20SnapshotAPI.snapshot);
@@ -920,7 +1143,9 @@ async function main() {
 
   // start server
   app.listen(3000, () => {
-    console.log("Server is running on http://localhost:3000");
+    console.log(
+      `${new Date().toString()} Server is running on http://localhost:3000`,
+    );
   });
 }
 
