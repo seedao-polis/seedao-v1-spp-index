@@ -124,20 +124,6 @@ export async function subscribeNewEvents(contract: Contract) {
       : contract.chainRPC.replace("http://", "ws://"),
   );
 
-  provider.websocket.onopen = async (e) => {
-    console.error("onopen", contract.name);
-  };
-  provider.websocket.onmessage = async (e) => {
-    console.error("onmessage", contract.name, e);
-  };
-  provider.websocket.onerror = async (e) => {
-    console.error("onerror", contract.name, e);
-  };
-
-  await provider.on("error", (error) => {
-    console.error("WebSocket error:", error);
-  });
-
   const c = new ethers.Contract(contract.addr, contract.abi, provider);
 
   for (let i = 0; i < contract.events.length; i++) {
@@ -169,8 +155,4 @@ export async function subscribeNewEvents(contract: Contract) {
       );
     });
   }
-
-  setInterval(async () => {
-    await provider.send("ping", []);
-  }, 2000);
 }
