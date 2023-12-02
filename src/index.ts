@@ -25,7 +25,8 @@ import {
   ERC1155TokenTransferBatchTxService,
 } from "./api/service/erc1155";
 import { SNSNameregisteredTxService, SNSService } from "./api/service/sns";
-import { ethers } from "ethers";
+import { ethers, WebSocketProvider } from "ethers";
+import { WebSocket } from "ws";
 import {
   findCharacterSet,
   getCodePointLength,
@@ -1088,7 +1089,35 @@ async function main() {
     ...snsResolver,
   ];
   for (const contract of contracts) {
-    await subscribeNewEvents(contract);
+    // <+++++++++++++++++++++++++++++++++
+    function createWebSocket() {
+      const url = contract.chainRPC.startsWith("https://")
+        ? contract.chainRPC.replace("https://", "wss://")
+        : contract.chainRPC.replace("http://", "ws://");
+
+      const ws = new WebSocket(url);
+      ws.on("close", () => {
+        console.log("Disconnected. Reconnecting...");
+        setTimeout(async () => {
+          // <--------------------
+          const provider = new WebSocketProvider(createWebSocket());
+          await subscribeNewEvents(contract, provider);
+          // <--------------------
+        }, 100);
+      });
+
+      ws.on("error", (error) => {
+        console.log("WebSocket error: ", error);
+      });
+
+      return ws;
+    }
+    // <+++++++++++++++++++++++++++++++++
+    // <--------------------
+    const provider = new WebSocketProvider(createWebSocket());
+    await subscribeNewEvents(contract, provider);
+    // <--------------------
+
     await queryHistoryEvents(contract);
   }
 

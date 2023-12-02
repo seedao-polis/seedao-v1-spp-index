@@ -109,7 +109,10 @@ export async function queryHistoryEvents(contract: Contract) {
   }
 }
 
-export async function subscribeNewEvents(contract: Contract) {
+export async function subscribeNewEvents(
+  contract: Contract,
+  provider: WebSocketProvider,
+) {
   if (contract.events.length == 0 || contract.callbacks.length == 0) {
     return;
   }
@@ -118,11 +121,11 @@ export async function subscribeNewEvents(contract: Contract) {
     throw new Error("events and callbacks length not match");
   }
 
-  const provider = new WebSocketProvider(
-    contract.chainRPC.startsWith("https://")
-      ? contract.chainRPC.replace("https://", "wss://")
-      : contract.chainRPC.replace("http://", "ws://"),
-  );
+  // const provider = new WebSocketProvider(
+  //   contract.chainRPC.startsWith("https://")
+  //     ? contract.chainRPC.replace("https://", "wss://")
+  //     : contract.chainRPC.replace("http://", "ws://"),
+  // );
 
   const c = new ethers.Contract(contract.addr, contract.abi, provider);
 
