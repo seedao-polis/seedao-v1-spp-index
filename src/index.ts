@@ -764,7 +764,7 @@ async function main() {
       name: "BaseRegistrar",
       addr: snsConf.BaseRegistrar.addr,
       fromBlock: (_: string): Promise<number> => {
-        return ERC20TokenTransferTxService.getLatestBlockNumber(
+        return ERC721TokenTransferTxService.getLatestBlockNumber(
           client,
           snsConf.BaseRegistrar.addr,
         );
