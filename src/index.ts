@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { PrismaClient, Prisma } from "@prisma/client";
+import cron from "node-cron";
 import { snsAPI } from "./api/sns";
 import {
   Contract,
@@ -25,7 +26,8 @@ import {
   ERC1155TokenTransferBatchTxService,
 } from "./api/service/erc1155";
 import { SNSNameregisteredTxService, SNSService } from "./api/service/sns";
-import { ethers } from "ethers";
+import { ethers, WebSocketProvider } from "ethers";
+import { WebSocket } from "ws";
 import {
   findCharacterSet,
   getCodePointLength,
@@ -44,6 +46,7 @@ import {
   SNSResolverNameChangedTxService,
 } from "./api/service/sns_resolver";
 import { snsResolverAPI } from "./api/sns_resolver";
+import { clearInterval } from "timers";
 
 interface ContractConf {
   name: string;
@@ -74,10 +77,12 @@ async function main() {
       return {
         name: c.name,
         addr: c.addr,
-        fromBlock: await ERC20TokenTransferTxService.getLatestBlockNumber(
-          client,
-          c.addr,
-        ),
+        fromBlock: (contractAddr: string): Promise<number> => {
+          return ERC20TokenTransferTxService.getLatestBlockNumber(
+            client,
+            contractAddr,
+          );
+        },
         abi: [
           "event Transfer(address indexed from, address indexed to, uint256 value)",
         ],
@@ -212,10 +217,12 @@ async function main() {
       return {
         name: c.name,
         addr: c.addr,
-        fromBlock: await ERC721TokenTransferTxService.getLatestBlockNumber(
-          client,
-          c.addr,
-        ),
+        fromBlock: (contractAddr: string): Promise<number> => {
+          return ERC721TokenTransferTxService.getLatestBlockNumber(
+            client,
+            contractAddr,
+          );
+        },
         abi: [
           "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
         ],
@@ -338,17 +345,19 @@ async function main() {
       return {
         name: c.name,
         addr: c.addr,
-        fromBlock: Math.max(
-          0,
-          await ERC1155TokenTransferSingleTxService.getLatestBlockNumber(
-            client,
-            c.addr,
-          ),
-          await ERC1155TokenTransferBatchTxService.getLatestBlockNumber(
-            client,
-            c.addr,
-          ),
-        ), // use the biggest block number of `TransferSingle` and `TransferBatch` events
+        fromBlock: async (contractAddr: string): Promise<number> => {
+          return Math.max(
+            0,
+            await ERC1155TokenTransferSingleTxService.getLatestBlockNumber(
+              client,
+              c.addr,
+            ),
+            await ERC1155TokenTransferBatchTxService.getLatestBlockNumber(
+              client,
+              c.addr,
+            ),
+          );
+        }, // use the biggest block number of `TransferSingle` and `TransferBatch` events
         abi: [
           "event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value)",
           "event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values)",
@@ -646,8 +655,10 @@ async function main() {
   const SNSContracts: Contract[] = [
     {
       name: "SeeDAORegistrarController",
-      addr: snsConf.snsSeeDAORegistrarController.addr,
-      fromBlock: await SNSNameregisteredTxService.getLatestBlockNumber(client),
+      addr: snsConf.SeeDAORegistrarController.addr,
+      fromBlock: (_: string): Promise<number> => {
+        return SNSNameregisteredTxService.getLatestBlockNumber(client);
+      },
       abi: ["event NameRegistered(string name, address owner)"],
       chainRPC: snsConf.chainRPC,
       events: ["NameRegistered"],
@@ -739,7 +750,7 @@ async function main() {
             await sendWebhook(
               {
                 contractName: "SeeDAORegistrarController",
-                contractAddress: snsConf.snsSeeDAORegistrarController.addr,
+                contractAddress: snsConf.SeeDAORegistrarController.addr,
                 event: "Transfer",
                 data: unHandleEvents,
               },
@@ -751,11 +762,13 @@ async function main() {
     },
     {
       name: "BaseRegistrar",
-      addr: snsConf.snsBaseRegistrar.addr,
-      fromBlock: await ERC20TokenTransferTxService.getLatestBlockNumber(
-        client,
-        snsConf.snsBaseRegistrar.addr,
-      ),
+      addr: snsConf.BaseRegistrar.addr,
+      fromBlock: (_: string): Promise<number> => {
+        return ERC721TokenTransferTxService.getLatestBlockNumber(
+          client,
+          snsConf.BaseRegistrar.addr,
+        );
+      },
       abi: [
         "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
       ],
@@ -791,7 +804,7 @@ async function main() {
             const transferTx =
               await ERC721TokenTransferTxService.getByContractAndTxAndHandler(
                 client,
-                snsConf.snsBaseRegistrar.addr,
+                snsConf.BaseRegistrar.addr,
                 param.tx,
                 from,
                 to,
@@ -801,7 +814,7 @@ async function main() {
             if (transferTx == null) {
               // save tx
               await ERC721TokenTransferTxService.create(client, {
-                contractAddress: snsConf.snsBaseRegistrar.addr,
+                contractAddress: snsConf.BaseRegistrar.addr,
                 tx: param.tx,
                 blockNumber: param.blockNumber,
                 timestamp: param.timestamp,
@@ -859,7 +872,7 @@ async function main() {
             await sendWebhook(
               {
                 contractName: "BaseRegistrar",
-                contractAddress: snsConf.snsBaseRegistrar.addr,
+                contractAddress: snsConf.BaseRegistrar.addr,
                 event: "Transfer",
                 data: unHandleEvents,
               },
@@ -873,13 +886,21 @@ async function main() {
   const resolverConf = conf.contracts.NO_ERC_STD.sns_resolver;
   const snsResolver: Contract[] = [
     {
-      name: "PublicResolver_AddrChanged",
+      name: "PublicResolver",
       addr: resolverConf.PublicResolver.addr,
-      fromBlock:
-        await SNSResolverAddrChangedTxService.getLatestBlockNumber(client),
-      abi: ["event AddrChanged(bytes32 indexed node, address a)"],
+      fromBlock: async (_: string): Promise<number> => {
+        return Math.max(
+          0,
+          await SNSResolverAddrChangedTxService.getLatestBlockNumber(client),
+          await SNSResolverNameChangedTxService.getLatestBlockNumber(client),
+        );
+      },
+      abi: [
+        "event AddrChanged(bytes32 indexed node, address a)",
+        "event NameChanged(bytes32 indexed node, string name)",
+      ],
       chainRPC: resolverConf.chainRPC,
-      events: ["AddrChanged"],
+      events: ["AddrChanged", "NameChanged"],
       callbacks: [
         async (params, handler) => {
           const unHandleEvents: {
@@ -975,17 +996,6 @@ async function main() {
             );
           }
         },
-      ],
-    },
-    {
-      name: "PublicResolver_NameChanged",
-      addr: resolverConf.PublicResolver.addr,
-      fromBlock:
-        await SNSResolverNameChangedTxService.getLatestBlockNumber(client),
-      abi: ["event NameChanged(bytes32 indexed node, string name)"],
-      chainRPC: resolverConf.chainRPC,
-      events: ["NameChanged"],
-      callbacks: [
         async (params, handler) => {
           const unHandleEvents: {
             metadata: {
@@ -1088,9 +1098,70 @@ async function main() {
     ...snsResolver,
   ];
   for (const contract of contracts) {
-    await subscribeNewEvents(contract);
+    // <+++++++++++++++++++++++++++++++++
+    function createWebSocket() {
+      const url = contract.chainRPC.startsWith("https://")
+        ? contract.chainRPC.replace("https://", "wss://")
+        : contract.chainRPC.replace("http://", "ws://");
+
+      const ws = new WebSocket(url);
+      // listen 'open' event and send 'ping' interval
+      let ping: any;
+      ws.on("open", () => {
+        ping = setInterval(() => {
+          // console.log(`Sending Websocket ping... [contract=${contract.name}]`);
+          ws.send("ping");
+        }, 4000); // keep alive
+      });
+      // listen 'close' event
+      ws.on("close", () => {
+        console.log(
+          `WebSocket disconnected. Reconnecting... [contract=${contract.name}]`,
+        );
+        clearInterval(ping);
+        setTimeout(async () => {
+          // <--------------------
+          const provider = new WebSocketProvider(createWebSocket());
+          await subscribeNewEvents(contract, provider);
+          // <--------------------
+        }, 100);
+      });
+      // listen 'error' event
+      ws.on("error", (e) => {
+        console.log(
+          `WebSocket error: [${e}]. Reconnecting... [contract=${contract.name}]`,
+        );
+        clearInterval(ping);
+        setTimeout(async () => {
+          // <--------------------
+          const provider = new WebSocketProvider(createWebSocket());
+          await subscribeNewEvents(contract, provider);
+          // <--------------------
+        }, 100);
+      });
+
+      return ws;
+    }
+    // <+++++++++++++++++++++++++++++++++
+    // <--------------------
+    const provider = new WebSocketProvider(createWebSocket());
+    await subscribeNewEvents(contract, provider);
+    // <--------------------
+
     await queryHistoryEvents(contract);
   }
+
+  // executing 'queryHistoryEvents()' every 5 minutes
+  // refer: https://www.npmjs.com/package/node-cron
+  // cronExpression: "minute hour dayOfMonth month dayOfWeek"
+  cron.schedule("*/5 * * * *", async () => {
+    for (const contract of contracts) {
+      console.log(
+        `CronTask: executing 'queryHistoryEvents()'... [contract=${contract.name}]`,
+      );
+      await queryHistoryEvents(contract);
+    }
+  });
 
   // instance Express App
   const app = express();
