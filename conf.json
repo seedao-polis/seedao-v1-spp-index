@@ -1,5 +1,4 @@
 {
-  "metadata_host": "https://test-spp-indexer.seedao.tech/",
   "contracts": {
     "ERC20": [
       {
@@ -60,11 +59,11 @@
     ],
     "NO_ERC_STD": {
       "sns": {
-        "snsSeeDAORegistrarController": {
+        "SeeDAORegistrarController": {
           "_comment": "not a ERC standard",
           "addr": "0xded0a911F095349A071CA71Bb8237C4a40947159"
         },
-        "snsBaseRegistrar": {
+        "BaseRegistrar": {
           "_comment": "is ERC721",
           "addr": "0x437C46603C4507534137AEa9A682c4Ad00143822"
         },

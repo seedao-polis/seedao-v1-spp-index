@@ -75,10 +75,12 @@ async function main() {
       return {
         name: c.name,
         addr: c.addr,
-        fromBlock: await ERC20TokenTransferTxService.getLatestBlockNumber(
-          client,
-          c.addr,
-        ),
+        fromBlock: (contractAddr: string): Promise<number> => {
+          return ERC20TokenTransferTxService.getLatestBlockNumber(
+            client,
+            contractAddr,
+          );
+        },
         abi: [
           "event Transfer(address indexed from, address indexed to, uint256 value)",
         ],
@@ -213,10 +215,12 @@ async function main() {
       return {
         name: c.name,
         addr: c.addr,
-        fromBlock: await ERC721TokenTransferTxService.getLatestBlockNumber(
-          client,
-          c.addr,
-        ),
+        fromBlock: (contractAddr: string): Promise<number> => {
+          return ERC721TokenTransferTxService.getLatestBlockNumber(
+            client,
+            contractAddr,
+          );
+        },
         abi: [
           "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
         ],
@@ -339,17 +343,19 @@ async function main() {
       return {
         name: c.name,
         addr: c.addr,
-        fromBlock: Math.max(
-          0,
-          await ERC1155TokenTransferSingleTxService.getLatestBlockNumber(
-            client,
-            c.addr,
-          ),
-          await ERC1155TokenTransferBatchTxService.getLatestBlockNumber(
-            client,
-            c.addr,
-          ),
-        ), // use the biggest block number of `TransferSingle` and `TransferBatch` events
+        fromBlock: async (contractAddr: string): Promise<number> => {
+          return Math.max(
+            0,
+            await ERC1155TokenTransferSingleTxService.getLatestBlockNumber(
+              client,
+              c.addr,
+            ),
+            await ERC1155TokenTransferBatchTxService.getLatestBlockNumber(
+              client,
+              c.addr,
+            ),
+          );
+        }, // use the biggest block number of `TransferSingle` and `TransferBatch` events
         abi: [
           "event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value)",
           "event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values)",
@@ -647,8 +653,10 @@ async function main() {
   const SNSContracts: Contract[] = [
     {
       name: "SeeDAORegistrarController",
-      addr: snsConf.snsSeeDAORegistrarController.addr,
-      fromBlock: await SNSNameregisteredTxService.getLatestBlockNumber(client),
+      addr: snsConf.SeeDAORegistrarController.addr,
+      fromBlock: (_: string): Promise<number> => {
+        return SNSNameregisteredTxService.getLatestBlockNumber(client);
+      },
       abi: ["event NameRegistered(string name, address owner)"],
       chainRPC: snsConf.chainRPC,
       events: ["NameRegistered"],
@@ -740,7 +748,7 @@ async function main() {
             await sendWebhook(
               {
                 contractName: "SeeDAORegistrarController",
-                contractAddress: snsConf.snsSeeDAORegistrarController.addr,
+                contractAddress: snsConf.SeeDAORegistrarController.addr,
                 event: "Transfer",
                 data: unHandleEvents,
               },
@@ -752,11 +760,13 @@ async function main() {
     },
     {
       name: "BaseRegistrar",
-      addr: snsConf.snsBaseRegistrar.addr,
-      fromBlock: await ERC20TokenTransferTxService.getLatestBlockNumber(
-        client,
-        snsConf.snsBaseRegistrar.addr,
-      ),
+      addr: snsConf.BaseRegistrar.addr,
+      fromBlock: (_: string): Promise<number> => {
+        return ERC20TokenTransferTxService.getLatestBlockNumber(
+          client,
+          snsConf.BaseRegistrar.addr,
+        );
+      },
       abi: [
         "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
       ],
@@ -792,7 +802,7 @@ async function main() {
             const transferTx =
               await ERC721TokenTransferTxService.getByContractAndTxAndHandler(
                 client,
-                snsConf.snsBaseRegistrar.addr,
+                snsConf.BaseRegistrar.addr,
                 param.tx,
                 from,
                 to,
@@ -802,7 +812,7 @@ async function main() {
             if (transferTx == null) {
               // save tx
               await ERC721TokenTransferTxService.create(client, {
-                contractAddress: snsConf.snsBaseRegistrar.addr,
+                contractAddress: snsConf.BaseRegistrar.addr,
                 tx: param.tx,
                 blockNumber: param.blockNumber,
                 timestamp: param.timestamp,
@@ -860,7 +870,7 @@ async function main() {
             await sendWebhook(
               {
                 contractName: "BaseRegistrar",
-                contractAddress: snsConf.snsBaseRegistrar.addr,
+                contractAddress: snsConf.BaseRegistrar.addr,
                 event: "Transfer",
                 data: unHandleEvents,
               },
@@ -874,11 +884,19 @@ async function main() {
   const resolverConf = conf.contracts.NO_ERC_STD.sns_resolver;
   const snsResolver: Contract[] = [
     {
-      name: "PublicResolver_AddrChanged",
+      name: "PublicResolver",
       addr: resolverConf.PublicResolver.addr,
-      fromBlock:
-        await SNSResolverAddrChangedTxService.getLatestBlockNumber(client),
-      abi: ["event AddrChanged(bytes32 indexed node, address a)"],
+      fromBlock: async (_: string): Promise<number> => {
+        return Math.max(
+          0,
+          await SNSResolverAddrChangedTxService.getLatestBlockNumber(client),
+          await SNSResolverNameChangedTxService.getLatestBlockNumber(client),
+        );
+      },
+      abi: [
+        "event AddrChanged(bytes32 indexed node, address a)",
+        "event NameChanged(bytes32 indexed node, string name)",
+      ],
       chainRPC: resolverConf.chainRPC,
       events: ["AddrChanged"],
       callbacks: [
@@ -976,17 +994,6 @@ async function main() {
             );
           }
         },
-      ],
-    },
-    {
-      name: "PublicResolver_NameChanged",
-      addr: resolverConf.PublicResolver.addr,
-      fromBlock:
-        await SNSResolverNameChangedTxService.getLatestBlockNumber(client),
-      abi: ["event NameChanged(bytes32 indexed node, string name)"],
-      chainRPC: resolverConf.chainRPC,
-      events: ["NameChanged"],
-      callbacks: [
         async (params, handler) => {
           const unHandleEvents: {
             metadata: {

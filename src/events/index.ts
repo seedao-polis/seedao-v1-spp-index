@@ -15,7 +15,7 @@ export function toggle(handler: CallbackHandler) {
 export interface Contract {
   name: string;
   addr: string;
-  fromBlock: number;
+  fromBlock: (contractAddr: string) => Promise<number>;
   abi: string[];
   chainRPC: string;
   events: string[]; // want to listen events
@@ -35,11 +35,10 @@ export async function queryHistoryEvents(contract: Contract) {
   }
 
   const provider = new JsonRpcProvider(contract.chainRPC);
+  const fromBlock = await contract.fromBlock(contract.addr);
   let latestBlockNumber = await provider.getBlockNumber();
   latestBlockNumber =
-    latestBlockNumber > contract.fromBlock + 1
-      ? latestBlockNumber
-      : contract.fromBlock + 1;
+    latestBlockNumber > fromBlock + 1 ? latestBlockNumber : fromBlock + 1;
 
   const c = new ethers.Contract(contract.addr, contract.abi, provider);
 
@@ -49,14 +48,14 @@ export async function queryHistoryEvents(contract: Contract) {
   for (let i = 0; i < contract.events.length; i++) {
     console.log(
       `query ${contract.name}'s ${contract.events[i]} event from block[${
-        contract.fromBlock + 1
+        fromBlock + 1
       }] to block[${latestBlockNumber}]`,
     );
 
     const filter = c.filters[contract.events[i]]();
     const events = await c.queryFilter(
       filter,
-      contract.fromBlock + 1,
+      fromBlock + 1,
       latestBlockNumber,
     );
 
