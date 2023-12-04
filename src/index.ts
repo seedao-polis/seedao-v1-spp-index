@@ -1154,7 +1154,7 @@ async function main() {
   // executing 'queryHistoryEvents()' every 5 minutes
   // refer: https://www.npmjs.com/package/node-cron
   // cronExpression: "minute hour dayOfMonth month dayOfWeek"
-  cron.schedule("*/1 * * * *", async () => {
+  cron.schedule("*/5 * * * *", async () => {
     for (const contract of contracts) {
       console.log(
         `CronTask: executing 'queryHistoryEvents()'... [contract=${contract.name}]`,
