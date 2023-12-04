@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { PrismaClient, Prisma } from "@prisma/client";
+import cron from "node-cron";
 import { snsAPI } from "./api/sns";
 import {
   Contract,
@@ -1149,6 +1150,18 @@ async function main() {
 
     await queryHistoryEvents(contract);
   }
+
+  // executing 'queryHistoryEvents()' every 5 minutes
+  // refer: https://www.npmjs.com/package/node-cron
+  // cronExpression: "minute hour dayOfMonth month dayOfWeek"
+  cron.schedule("*/1 * * * *", async () => {
+    for (const contract of contracts) {
+      console.log(
+        `CronTask: executing 'queryHistoryEvents()'... [contract=${contract.name}]`,
+      );
+      await queryHistoryEvents(contract);
+    }
+  });
 
   // instance Express App
   const app = express();
