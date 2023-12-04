@@ -45,6 +45,7 @@ import {
   SNSResolverNameChangedTxService,
 } from "./api/service/sns_resolver";
 import { snsResolverAPI } from "./api/sns_resolver";
+import { clearInterval } from "timers";
 
 interface ContractConf {
   name: string;
@@ -898,7 +899,7 @@ async function main() {
         "event NameChanged(bytes32 indexed node, string name)",
       ],
       chainRPC: resolverConf.chainRPC,
-      events: ["AddrChanged"],
+      events: ["AddrChanged", "NameChanged"],
       callbacks: [
         async (params, handler) => {
           const unHandleEvents: {
@@ -1103,8 +1104,20 @@ async function main() {
         : contract.chainRPC.replace("http://", "ws://");
 
       const ws = new WebSocket(url);
+      // listen 'open' event and send 'ping' interval
+      let ping: any;
+      ws.on("open", () => {
+        ping = setInterval(() => {
+          // console.log(`Sending Websocket ping... [contract=${contract.name}]`);
+          ws.send("ping");
+        }, 4000); // keep alive
+      });
+      // listen 'close' event
       ws.on("close", () => {
-        console.log("Disconnected. Reconnecting...");
+        console.log(
+          `WebSocket disconnected. Reconnecting... [contract=${contract.name}]`,
+        );
+        clearInterval(ping);
         setTimeout(async () => {
           // <--------------------
           const provider = new WebSocketProvider(createWebSocket());
@@ -1112,9 +1125,18 @@ async function main() {
           // <--------------------
         }, 100);
       });
-
-      ws.on("error", (error) => {
-        console.log("WebSocket error: ", error);
+      // listen 'error' event
+      ws.on("error", (e) => {
+        console.log(
+          `WebSocket error: [${e}]. Reconnecting... [contract=${contract.name}]`,
+        );
+        clearInterval(ping);
+        setTimeout(async () => {
+          // <--------------------
+          const provider = new WebSocketProvider(createWebSocket());
+          await subscribeNewEvents(contract, provider);
+          // <--------------------
+        }, 100);
       });
 
       return ws;
