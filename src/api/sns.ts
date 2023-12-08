@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { SNSService } from "./service/sns";
+import { builtin } from "@seedao/sns-js";
+import safe from "@seedao/sns-safe";
 
 export namespace snsAPI {
   // `/sns/all`
@@ -21,7 +23,16 @@ export namespace snsAPI {
       return;
     }
 
-    resp.json(snsList);
+    // filter sensitive words
+    const safeNames = (
+      await safe.safe(
+        snsList.map((sns) => sns.sns),
+        builtin.SAFE_HOST,
+      )
+    ).filter((name) => name != "");
+    const result = snsList.filter((sns) => safeNames.includes(sns.sns));
+
+    resp.json(result);
   }
 
   // `/sns/by_name?name=abc.seedao`
@@ -35,7 +46,12 @@ export namespace snsAPI {
       return;
     }
 
-    resp.json(sns);
+    // check if contains sensitive words
+    if (await safe.isSafe(sns.sns, builtin.SAFE_HOST)) {
+      resp.json(sns);
+    } else {
+      resp.status(404).json({ error: "SNS not safe" });
+    }
   }
 
   // `/sns/by_token_id/:tokenId`
@@ -49,6 +65,11 @@ export namespace snsAPI {
       return;
     }
 
-    resp.json(sns);
+    // check if contains sensitive words
+    if (await safe.isSafe(sns.sns, builtin.SAFE_HOST)) {
+      resp.json(sns);
+    } else {
+      resp.status(404).json({ error: "SNS not safe" });
+    }
   }
 }

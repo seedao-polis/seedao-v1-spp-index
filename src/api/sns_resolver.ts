@@ -6,6 +6,9 @@ import {
 import { PrismaClient } from "@prisma/client";
 
 export namespace snsResolverAPI {
+
+  // ---------> !! all functions don't need to handle sensitive words, handled by sns-js sdk !!
+
   // `/resolver/get_address?node=namehash(abc.seedao)`
   export async function address(req: Request, resp: Response) {
     const node: string = req.query.node as string;
