@@ -841,22 +841,22 @@ async function main() {
                     param.timestamp,
                   );
                 }
-              }
 
-              // add to unHandleEvents
-              unHandleEvents.push({
-                metadata: {
-                  blockNumber: param.blockNumber,
-                  timestamp: param.timestamp,
-                  tx: param.tx,
-                },
-                parameters: {
-                  from: from,
-                  to: to,
-                  tokenId: tokenId,
-                  sns: sns.sns,
-                },
-              });
+                // add to unHandleEvents
+                unHandleEvents.push({
+                  metadata: {
+                    blockNumber: param.blockNumber,
+                    timestamp: param.timestamp,
+                    tx: param.tx,
+                  },
+                  parameters: {
+                    from: from,
+                    to: to,
+                    tokenId: tokenId,
+                    sns: sns.sns,
+                  },
+                });
+              }
             } else {
               console.log(
                 `[BaseRegistrar.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
