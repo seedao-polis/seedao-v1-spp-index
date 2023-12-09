@@ -659,7 +659,9 @@ async function main() {
       fromBlock: (_: string): Promise<number> => {
         return SNSNameregisteredTxService.getLatestBlockNumber(client);
       },
-      abi: ["event NameRegistered(string name, address owner)"],
+      abi: [
+        "event NameRegistered(uint256 indexed id, string name, address owner)",
+      ],
       chainRPC: snsConf.chainRPC,
       events: ["NameRegistered"],
       callbacks: [
@@ -679,12 +681,13 @@ async function main() {
           }[] = [];
 
           for (const param of params) {
-            // [[name, owner], , ]
-            const name: string = param.args[0] as string;
-            const owner: string = param.args[1] as string;
+            // [[id, name, owner], , ]
+            const tokenId: string = param.args[0].toString();
+            const name: string = param.args[1] as string;
+            const owner: string = param.args[2] as string;
 
             console.log(
-              `[SeeDAORegistrarController.NameRegistered] Event: ${name} ${owner} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
+              `[SeeDAORegistrarController.NameRegistered] Event: ${tokenId} ${name} ${owner} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
             );
 
             // check if the event has been handled
@@ -708,9 +711,6 @@ async function main() {
               });
 
               // save data
-              const tokenId: string = ethers.keccak256(
-                ethers.toUtf8Bytes(name),
-              );
               await SNSService.create(client, {
                 tokenId: tokenId,
                 sns: name + ".seedao",
@@ -737,7 +737,7 @@ async function main() {
               });
             } else {
               console.log(
-                `[SeeDAORegistrarController.NameRegistered] Event: ${name} ${owner} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+                `[SeeDAORegistrarController.NameRegistered] Event: ${tokenId} ${name} ${owner} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
               );
             }
           }

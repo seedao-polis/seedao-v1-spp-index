@@ -61,11 +61,11 @@
       "sns": {
         "SeeDAORegistrarController": {
           "_comment": "not a ERC standard",
-          "addr": "0xEF6fcD9e393D1953605D535760e7009ff7509Af2"
+          "addr": "0x750071DB1Df9ba74D77a92591e039707dca2CFb8"
         },
         "BaseRegistrar": {
           "_comment": "is ERC721",
-          "addr": "0xEC6327377CBf328Bc07b3DD8Dc7313f097590991"
+          "addr": "0x620d50BEFB7471b574D225E0C90985520e7dd3fE"
         },
         "chainRPC": "https://eth-goerli.g.alchemy.com/v2/MATWeLJN1bEGTjSmtyLedn0i34o1ISLD",
         "webhooks": {
@@ -75,7 +75,7 @@
       "sns_resolver": {
         "PublicResolver": {
           "_comment": "not a ERC standard, need handle AddrChanged and NameChanged events",
-          "addr": "0x076951424DA36F5DCDBAf2d7D155BF92c855Edc6"
+          "addr": "0x01578E194eB8789EA1eeC88CDf8C70B879ad2766"
         },
         "chainRPC": "https://eth-goerli.g.alchemy.com/v2/MATWeLJN1bEGTjSmtyLedn0i34o1ISLD",
         "webhooks": {
