@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { SNSService } from "./service/sns";
 import { builtin } from "@seedao/sns-js";
-import safe from "@seedao/sns-safe";
+import { safe } from "@seedao/sns-safe";
 
 export namespace snsAPI {
   // `/sns/all`
@@ -11,6 +11,9 @@ export namespace snsAPI {
     resp.json({});
   }
 
+  // uses:
+  // 1. os-app MySNS page
+  //
   // `/sns/list_by_wallet/:wallet`
   export async function listByWallet(req: Request, resp: Response) {
     const wallet: string = req.params.wallet;
@@ -25,7 +28,7 @@ export namespace snsAPI {
 
     // filter sensitive words
     const safeNames = (
-      await safe.safe(
+      await safe(
         snsList.map((sns) => sns.sns),
         builtin.SAFE_HOST,
       )
@@ -35,6 +38,9 @@ export namespace snsAPI {
     resp.json(result);
   }
 
+  // uses:
+  // 1. sns-js-sdk `tokenId()` function
+  //
   // `/sns/by_name?name=abc.seedao`
   export async function byName(req: Request, resp: Response) {
     const name: string = req.query.name as string;
@@ -46,14 +52,17 @@ export namespace snsAPI {
       return;
     }
 
-    // check if contains sensitive words
-    if (await safe.isSafe(sns.sns, builtin.SAFE_HOST)) {
-      resp.json(sns);
-    } else {
-      resp.status(404).json({ error: "SNS not safe" });
-    }
+    // // check if contains sensitive words
+    // if (await isSafe(sns.sns, builtin.SAFE_HOST)) {
+    resp.json(sns);
+    // } else {
+    //   resp.status(404).json({ error: "SNS not safe" });
+    // }
   }
 
+  // uses:
+  // 1. <no>
+  //
   // `/sns/by_token_id/:tokenId`
   export async function byTokenId(req: Request, resp: Response) {
     const tokenId: string = req.params.tokenId;
@@ -65,11 +74,11 @@ export namespace snsAPI {
       return;
     }
 
-    // check if contains sensitive words
-    if (await safe.isSafe(sns.sns, builtin.SAFE_HOST)) {
-      resp.json(sns);
-    } else {
-      resp.status(404).json({ error: "SNS not safe" });
-    }
+    // // check if contains sensitive words
+    // if (await isSafe(sns.sns, builtin.SAFE_HOST)) {
+    resp.json(sns);
+    // } else {
+    //   resp.status(404).json({ error: "SNS not safe" });
+    // }
   }
 }

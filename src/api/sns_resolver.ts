@@ -6,9 +6,13 @@ import {
 import { PrismaClient } from "@prisma/client";
 
 export namespace snsResolverAPI {
-
+  //
   // ---------> !! all functions don't need to handle sensitive words, handled by sns-js sdk !!
+  //
 
+  // uses:
+  // 1. sns-js-sdk `resolver()` function
+  //
   // `/resolver/get_address?node=namehash(abc.seedao)`
   export async function address(req: Request, resp: Response) {
     const node: string = req.query.node as string;
@@ -24,6 +28,9 @@ export namespace snsResolverAPI {
     );
   }
 
+  // uses:
+  // 1. sns-js-sdk `resolvers()` function
+  //
   // `/resolver/get_addresses`
   export async function addresses(req: Request, resp: Response) {
     const nodes: string[] = req.body; // all item are `namehash(YOUR_NAME.seedao)`
@@ -41,6 +48,9 @@ export namespace snsResolverAPI {
     resp.json(result);
   }
 
+  // uses:
+  // 1. sns-js-sdk `name()` function
+  //
   // `/resolver/get_name?node=namehash(0x123.addr.reverse)`
   export async function name(req: Request, resp: Response) {
     const node: string = req.query.node as string;
@@ -52,6 +62,9 @@ export namespace snsResolverAPI {
     resp.send(r == null ? "" : r.name);
   }
 
+  // uses:
+  // 1. sns-js-sdk `names()` function
+  //
   // `/resolver/get_names`
   export async function names(req: Request, resp: Response) {
     const nodes: string[] = req.body; // all item are `namehash(YOUR_ADDR.addr.reverse)`
