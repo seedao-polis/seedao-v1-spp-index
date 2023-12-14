@@ -14,7 +14,7 @@ export namespace snsSnapshotAPI {
       await SNSNameregisteredTxService.getBeforeTimestamp(client, timestamp);
     const transferTx = await ERC721TokenTransferTxService.getBeforeTimestamp(
       client,
-      "0x6C679D0ca8C6e3692Ca033fab499242A94C257C2",
+      "0x5f3BD0CE4445E96F2D7DCC4bbA883378EAD8E10f", // BaseRegistrar contract address
       timestamp,
     );
 
@@ -25,19 +25,28 @@ export namespace snsSnapshotAPI {
         snapshot.set(tx.paramOwner, new Set<string>([tx.paramName]));
       } else {
         to.add(tx.paramName);
+        snapshot.set(tx.paramOwner, to);
       }
     });
     for (const tx of transferTx) {
       const sns =
         (await SNSService.getByTokenId(client, tx.paramTokenId))?.sns ?? "";
 
-      snapshot.get(tx.paramFrom)?.delete(sns);
+      if (tx.paramFrom !== ethers.ZeroAddress) {
+        const from = snapshot.get(tx.paramFrom);
+        if (from !== undefined) {
+          from.delete(sns);
+          snapshot.set(tx.paramFrom, from);
+        }
+      }
+
       if (tx.paramTo !== ethers.ZeroAddress) {
         const to = snapshot.get(tx.paramTo);
         if (to === undefined) {
           snapshot.set(tx.paramTo, new Set<string>([sns]));
         } else {
           to.add(sns);
+          snapshot.set(tx.paramTo, to);
         }
       }
     }

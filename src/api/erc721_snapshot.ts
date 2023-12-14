@@ -18,13 +18,21 @@ export namespace erc721SnapshotAPI {
 
     const snapshot = new Map<string, Set<string>>();
     tx.forEach((tx) => {
-      snapshot.get(tx.paramFrom)?.delete(tx.paramTokenId);
+      if (tx.paramFrom !== ethers.ZeroAddress) {
+        const from = snapshot.get(tx.paramFrom);
+        if (from !== undefined) {
+          from.delete(tx.paramTokenId);
+          snapshot.set(tx.paramFrom, from);
+        }
+      }
+
       if (tx.paramTo !== ethers.ZeroAddress) {
         const to = snapshot.get(tx.paramTo);
         if (to === undefined) {
           snapshot.set(tx.paramTo, new Set<string>([tx.paramTokenId]));
         } else {
           to.add(tx.paramTokenId);
+          snapshot.set(tx.paramTo, to);
         }
       }
     });
