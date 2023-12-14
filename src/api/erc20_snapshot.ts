@@ -18,13 +18,19 @@ export namespace erc20SnapshotAPI {
 
     const snapshot = new Map<string, Prisma.Decimal>();
     txes.forEach((tx) => {
-      snapshot.get(tx.paramFrom)?.sub(tx.paramValue);
+      if (tx.paramFrom !== ethers.ZeroAddress) {
+        const from = snapshot.get(tx.paramFrom);
+        if (from !== undefined) {
+          snapshot.set(tx.paramFrom, from.sub(tx.paramValue));
+        }
+      }
+
       if (tx.paramTo !== ethers.ZeroAddress) {
         const to = snapshot.get(tx.paramTo);
         if (to === undefined) {
           snapshot.set(tx.paramTo, tx.paramValue);
         } else {
-          to.add(tx.paramValue);
+          snapshot.set(tx.paramTo, to.add(tx.paramValue));
         }
       }
     });
