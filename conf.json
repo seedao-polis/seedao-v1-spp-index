@@ -61,11 +61,11 @@
       "sns": {
         "SeeDAORegistrarController": {
           "_comment": "not a ERC standard",
-          "addr": "0x16A404691241906F0f5cd9Cdf5F8bce6061f9Ce6"
+          "addr": "0x0E282cfc8c7293CBfDB80E289E19060C4c85cbED"
         },
         "BaseRegistrar": {
           "_comment": "is ERC721",
-          "addr": "0x1b2060496FAdf01705cFD71004f726e027997AeE"
+          "addr": "0x5f3BD0CE4445E96F2D7DCC4bbA883378EAD8E10f"
         },
         "chainRPC": "https://polygon-mainnet.g.alchemy.com/v2/-MLinGy2l91vLVZWXmRfNYf9DavMxaEA",
         "webhooks": {
@@ -75,7 +75,7 @@
       "sns_resolver": {
         "PublicResolver": {
           "_comment": "not a ERC standard, need handle AddrChanged and NameChanged events",
-          "addr": "0x274f7587690E330A6a2D59f114e5ffC939B4eF2E"
+          "addr": "0x64b7CbacE440808C8d71bb62E80A655331ABe092"
         },
         "chainRPC": "https://polygon-mainnet.g.alchemy.com/v2/-MLinGy2l91vLVZWXmRfNYf9DavMxaEA",
         "webhooks": {
