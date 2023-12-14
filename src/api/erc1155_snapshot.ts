@@ -26,9 +26,11 @@ export namespace erc1155SnapshotAPI {
 
     const snapshot = new Map<string, Map<string, bigint>>();
     tx1.forEach((tx) => {
-      const fm = snapshot.get(tx.paramFrom);
-      if (fm != undefined && fm.get(tx.paramId) != undefined) {
-        fm!.set(tx.paramId, fm.get(tx.paramId)! - tx.paramValue);
+      if (tx.paramFrom !== ethers.ZeroAddress) {
+        const from = snapshot.get(tx.paramFrom);
+        if (from != undefined && from.get(tx.paramId) != undefined) {
+          from.set(tx.paramId, from.get(tx.paramId)! - tx.paramValue);
+        }
       }
 
       if (tx.paramTo !== ethers.ZeroAddress) {
@@ -42,7 +44,7 @@ export namespace erc1155SnapshotAPI {
           if (to.get(tx.paramId) === undefined) {
             to.set(tx.paramId, tx.paramValue);
           } else {
-            to.set(tx.paramId, to.get(tx.paramId)! - tx.paramValue);
+            to.set(tx.paramId, to.get(tx.paramId)! + tx.paramValue);
           }
         }
       }
@@ -50,14 +52,18 @@ export namespace erc1155SnapshotAPI {
     tx2.forEach((tx) => {
       const ids = tx.paramIds.split("##");
       const values = tx.paramValues.split("##").map((v) => BigInt(v));
+
+      const from = snapshot.get(tx.paramFrom);
+      const to = snapshot.get(tx.paramTo);
+
       for (let i = 0; i < ids.length; i++) {
-        const fm = snapshot.get(tx.paramFrom);
-        if (fm != undefined && fm.get(ids[i]) != undefined) {
-          fm!.set(ids[i], fm.get(ids[i])! - values[i]);
+        if (tx.paramFrom !== ethers.ZeroAddress) {
+          if (from != undefined && from.get(ids[i]) != undefined) {
+            from.set(ids[i], from.get(ids[i])! - values[i]);
+          }
         }
 
         if (tx.paramTo !== ethers.ZeroAddress) {
-          const to = snapshot.get(tx.paramTo);
           if (to === undefined) {
             snapshot.set(
               tx.paramTo,
@@ -67,7 +73,7 @@ export namespace erc1155SnapshotAPI {
             if (to.get(ids[i]) === undefined) {
               to.set(ids[i], values[i]);
             } else {
-              to.set(ids[i], to.get(ids[i])! - values[i]);
+              to.set(ids[i], to.get(ids[i])! + values[i]);
             }
           }
         }
