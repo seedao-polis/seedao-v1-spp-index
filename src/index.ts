@@ -1110,7 +1110,7 @@ async function main() {
         );
       },
       abi: [
-        "event Borrow(uint256 indexed id, address indexed debtor, address borrowToken, uint256 borrowAmount, uint256 mortgageSCRAmount, uint256 interestRate, uint8 interestRateDecimals, uint256 borrowTimestamp, uint256 overdueTimestamp)",
+        "event Borrow(uint256 indexed id, address indexed debtor, address indexed borrowToken, uint256 borrowAmount, uint256 mortgageSCRAmount, uint256 interestRate, uint8 interestRateDecimals, uint256 borrowTimestamp, uint256 overdueTimestamp)",
         "event Payback(uint256 indexed id, uint256 interestDays, uint256 interestAmount)",
       ],
       chainRPC: scoreLendConf.chainRPC,
@@ -1358,11 +1358,11 @@ async function main() {
 
   // subscribe events first, and then query history events
   const contracts = [
-    ...ERC20Contracts,
-    ...ERC721Contracts,
-    ...ERC1155Contracts,
-    ...SNSContracts,
-    ...snsResolver,
+    // ...ERC20Contracts,
+    // ...ERC721Contracts,
+    // ...ERC1155Contracts,
+    // ...SNSContracts,
+    // ...snsResolver,
     ...scoreLend,
   ];
   for (const contract of contracts) {

@@ -85,7 +85,7 @@
       },
       "score_lend": {
         "ScoreLend": {
-          "addr": "0x7422CD95EDDE8AC601e6A3121B7C8AdA9fDa4384",
+          "addr": "0x6a5552112bB3b3e0AbF3c675c9819CAc805806F0",
           "scrDecimals": 18,
           "usdtDecimals": 6
         },
