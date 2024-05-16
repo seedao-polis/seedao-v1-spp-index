@@ -41,3 +41,21 @@ Accept: application/json
 
 ###
 GET {{host}}/insight/erc1155/total_supply/0x9d34D407D8586478b3e4c39BE633ED3D7be1c80c
+
+### ----- ----- ----- ----- ----- ----- ----- -----
+### ----- insight
+
+### totalBorrow
+GET {{host}}/score_lend/total_borrow
+
+### lends 1
+GET {{host}}/score_lend/lends?debtor=0x499F6aD9361743650f51fFEFDB3706a2eA3A3df1&lendStatus=0&sortField=borrowTimestamp&sortOrder=desc&page=1&size=10
+
+### lends 2
+GET {{host}}/score_lend/lends?debtor=0x499F6aD9361743650f51fFEFDB3706a2eA3A3df1&lendStatus=1&sortField=borrowTimestamp&sortOrder=desc&page=1&size=10
+
+### lends 3
+GET {{host}}/score_lend/lends?debtor=0x499F6aD9361743650f51fFEFDB3706a2eA3A3df1&lendStatus=2&sortField=borrowAmount&sortOrder=asc&page=1&size=10
+
+### lends 4
+GET {{host}}/score_lend/lends

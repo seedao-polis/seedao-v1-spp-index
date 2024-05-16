@@ -47,6 +47,12 @@ import {
 } from "./api/service/sns_resolver";
 import { snsResolverAPI } from "./api/sns_resolver";
 import { clearInterval } from "timers";
+import {
+  ScoreLendBorrowTxService,
+  ScoreLendPaybackTxService,
+  ScoreLendService,
+} from "./api/service/score_lend";
+import { scoreLendAPI } from "./api/score_lend";
 
 interface ContractConf {
   name: string;
@@ -70,7 +76,7 @@ async function main() {
   // init database
   const client = new PrismaClient();
 
-  // contracts need to indexed
+  // 'ERC20' 'ERC721' 'ERC1155' Contracts
   const ERC20Contracts: Contract[] = await Promise.all(
     conf.contracts.ERC20.map(async (c: ERC20Conf): Promise<Contract> => {
       const decimalD = new Prisma.Decimal(Math.pow(10, c.decimals));
@@ -651,6 +657,7 @@ async function main() {
       };
     }),
   );
+  // 'SeeDAORegistrarController' 'BaseRegistrar' Contract
   const snsConf = conf.contracts.NO_ERC_STD.sns;
   const SNSContracts: Contract[] = [
     {
@@ -883,6 +890,7 @@ async function main() {
       ],
     },
   ];
+  // 'PublicResolver' Contract
   const resolverConf = conf.contracts.NO_ERC_STD.sns_resolver;
   const snsResolver: Contract[] = [
     {
@@ -1088,6 +1096,263 @@ async function main() {
       ],
     },
   ];
+  // 'ScoreLend' Contract
+  const scoreLendConf = conf.contracts.NO_ERC_STD.score_lend;
+  const scoreLend: Contract[] = [
+    {
+      name: "ScoreLend",
+      addr: scoreLendConf.ScoreLend.addr,
+      fromBlock: async (_: string): Promise<number> => {
+        return Math.max(
+          0,
+          await ScoreLendBorrowTxService.getLatestBlockNumber(client),
+          await ScoreLendPaybackTxService.getLatestBlockNumber(client),
+        );
+      },
+      abi: [
+        "event Borrow(uint256 indexed id, address indexed debtor, address borrowToken, uint256 borrowAmount, uint256 mortgageSCRAmount, uint256 interestRate, uint8 interestRateDecimals, uint256 borrowTimestamp, uint256 overdueTimestamp)",
+        "event Payback(uint256 indexed id, uint256 interestDays, uint256 interestAmount)",
+      ],
+      chainRPC: scoreLendConf.chainRPC,
+      events: ["Borrow", "Payback"],
+      callbacks: [
+        async (params, handler) => {
+          const unHandleEvents: {
+            metadata: {
+              blockNumber: number;
+              timestamp: number;
+              tx: string;
+            };
+            parameters: {
+              id: string;
+              debtor: string;
+              borrowToken: string;
+              borrowAmount: Prisma.Decimal;
+              mortgageSCRAmount: Prisma.Decimal;
+              interestRate: number;
+              interestRateDecimals: number;
+              borrowTimestamp: number;
+              overdueTimestamp: number;
+            };
+          }[] = [];
+
+          const scrDecimals = new Prisma.Decimal(
+            Math.pow(10, scoreLendConf.ScoreLend.scrDecimals),
+          );
+          const usdtDecimals = new Prisma.Decimal(
+            Math.pow(10, scoreLendConf.ScoreLend.usdtDecimals),
+          );
+
+          for (const param of params) {
+            // [[id, debtor, borrowToken, borrowAmount, mortgageSCRAmount, interestRate, interestRateDecimals, borrowTimestamp, overdueTimestamp], , ]
+            const id: string = param.args[0].toString();
+            const debtor: string = param.args[1] as string;
+            const borrowToken: string = param.args[2] as string;
+            const borrowAmount: Prisma.Decimal = new Prisma.Decimal(
+              param.args[3].toString(),
+            ).dividedBy(usdtDecimals);
+            const mortgageSCRAmount: Prisma.Decimal = new Prisma.Decimal(
+              param.args[4].toString(),
+            ).dividedBy(scrDecimals);
+            const interestRate: number = param.args[5] as number;
+            const interestRateDecimals: number = param.args[6] as number;
+            const borrowTimestamp: number = param.args[7] as number;
+            const overdueTimestamp: number = param.args[8] as number;
+
+            console.log(
+              `[ScoreLend.Borrow] Event: ${id} ${debtor} ${borrowToken} ${borrowAmount} ${mortgageSCRAmount} ${interestRate} ${interestRateDecimals} ${borrowTimestamp} ${overdueTimestamp} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
+            );
+
+            // check if the event has been handled
+            const transferTx = await ScoreLendBorrowTxService.getByTxAndHandler(
+              client,
+              param.tx,
+              id,
+              toggle(handler), // when executing `query`, checking if the event has been handled by `on`, and vice versa
+            );
+            if (transferTx == null) {
+              // save tx
+              await ScoreLendBorrowTxService.create(client, {
+                tx: param.tx,
+                blockNumber: param.blockNumber,
+                timestamp: param.timestamp,
+                handler: handler,
+                paramId: id,
+                paramDebtor: debtor,
+                paramBorrowToken: borrowToken,
+                paramBorrowAmount: borrowAmount,
+                paramMortgageSCRAmount: mortgageSCRAmount,
+                paramInterestRate: interestRate,
+                paramInterestRateDecimals: interestRateDecimals,
+                paramBorrowTimestamp: borrowTimestamp,
+                paramOverdueTimestamp: overdueTimestamp,
+              });
+
+              // save data
+              if ((await ScoreLendService.getByLendId(client, id)) == null) {
+                await ScoreLendService.create(client, {
+                  lendId: id,
+                  lendStatus: ScoreLendService.LEND_STATUS_IN_USE,
+                  debtor,
+                  borrowToken,
+                  borrowAmount,
+                  mortgageSCRAmount,
+                  interestRate: new Prisma.Decimal(interestRate).dividedBy(
+                    new Prisma.Decimal(interestRateDecimals),
+                  ),
+                  borrowTimestamp,
+                  borrowTx: param.tx,
+                  overdueTimestamp,
+                  paybackTimestamp: 0,
+                  paybackTx: "",
+                  interestDays: 0,
+                  interestAmount: 0,
+                });
+              }
+
+              // add to unHandleEvents
+              unHandleEvents.push({
+                metadata: {
+                  blockNumber: param.blockNumber,
+                  timestamp: param.timestamp,
+                  tx: param.tx,
+                },
+                parameters: {
+                  id,
+                  debtor,
+                  borrowToken,
+                  borrowAmount,
+                  mortgageSCRAmount,
+                  interestRate,
+                  interestRateDecimals,
+                  borrowTimestamp,
+                  overdueTimestamp,
+                },
+              });
+            } else {
+              console.log(
+                `[ScoreLend.Borrow] Event: ${id} ${debtor} ${borrowToken} ${borrowAmount} ${mortgageSCRAmount} ${interestRate} ${interestRateDecimals} ${borrowTimestamp} ${overdueTimestamp} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+              );
+            }
+          }
+
+          // send webhook
+          if (
+            unHandleEvents.length != 0 &&
+            scoreLendConf.webhooks.Borrow.length != 0
+          ) {
+            await sendWebhook(
+              {
+                contractName: "ScoreLend",
+                contractAddress: scoreLendConf.ScoreLend.addr,
+                event: "Borrow",
+                data: unHandleEvents,
+              },
+              scoreLendConf.webhooks.Borrow,
+            );
+          }
+        },
+        async (params, handler) => {
+          const unHandleEvents: {
+            metadata: {
+              blockNumber: number;
+              timestamp: number;
+              tx: string;
+            };
+            parameters: {
+              id: string;
+              interestDays: number;
+              interestAmount: Prisma.Decimal;
+            };
+          }[] = [];
+
+          const usdtDecimals = new Prisma.Decimal(
+            Math.pow(10, scoreLendConf.ScoreLend.usdtDecimals),
+          );
+
+          for (const param of params) {
+            // [[id, interestDays, interestAmount], , ]
+            const id: string = param.args[0].toString();
+            const interestDays: number = param.args[1] as number;
+            const interestAmount: Prisma.Decimal = new Prisma.Decimal(
+              param.args[2].toString(),
+            ).dividedBy(usdtDecimals);
+
+            console.log(
+              `[ScoreLend.Payback] Event: ${id} ${interestDays} ${interestAmount} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
+            );
+
+            // check if the event has been handled
+            const transferTx =
+              await ScoreLendPaybackTxService.getByTxAndHandler(
+                client,
+                param.tx,
+                id,
+                toggle(handler), // when executing `query`, checking if the event has been handled by `on`, and vice versa
+              );
+            if (transferTx == null) {
+              // save tx
+              await ScoreLendPaybackTxService.create(client, {
+                tx: param.tx,
+                blockNumber: param.blockNumber,
+                timestamp: param.timestamp,
+                handler: handler,
+                paramId: id,
+                paramInterestDays: interestDays,
+                paramInterestAmount: interestAmount,
+              });
+
+              // save data
+              if ((await ScoreLendService.getByLendId(client, id)) != null) {
+                await ScoreLendService.updateToPaybackByLendId(
+                  client,
+                  id,
+                  param.timestamp,
+                  param.tx,
+                  interestDays,
+                  interestAmount,
+                );
+              }
+
+              // add to unHandleEvents
+              unHandleEvents.push({
+                metadata: {
+                  blockNumber: param.blockNumber,
+                  timestamp: param.timestamp,
+                  tx: param.tx,
+                },
+                parameters: {
+                  id,
+                  interestDays,
+                  interestAmount,
+                },
+              });
+            } else {
+              console.log(
+                `[ScoreLend.Payback] Event: ${id} ${interestDays} ${interestAmount} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+              );
+            }
+          }
+
+          // send webhook
+          if (
+            unHandleEvents.length != 0 &&
+            scoreLendConf.webhooks.Payback.length != 0
+          ) {
+            await sendWebhook(
+              {
+                contractName: "ScoreLend",
+                contractAddress: scoreLendConf.ScoreLend.addr,
+                event: "Payback",
+                data: unHandleEvents,
+              },
+              scoreLendConf.webhooks.Payback,
+            );
+          }
+        },
+      ],
+    },
+  ];
 
   // subscribe events first, and then query history events
   const contracts = [
@@ -1096,6 +1361,7 @@ async function main() {
     ...ERC1155Contracts,
     ...SNSContracts,
     ...snsResolver,
+    ...scoreLend,
   ];
   for (const contract of contracts) {
     // <+++++++++++++++++++++++++++++++++
@@ -1211,6 +1477,10 @@ async function main() {
     "/insight/erc1155/total_supply/:contractAddress",
     insightAPI.ERC1155TotalSupply,
   );
+
+  // ScoreLend apis
+  app.get("/score_lend/total_borrow", scoreLendAPI.totalBorrow);
+  app.get("/score_lend/lends", scoreLendAPI.lends);
 
   // start server
   app.listen(3000, () => {

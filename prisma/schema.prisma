@@ -141,3 +141,51 @@ model SNSResolverNameChangedTx {
   paramNode   String
   paramName   String
 }
+
+// --------------------------------------
+
+model ScoreLend {
+  id                Int     @id @default(autoincrement())
+  lendId            String  @unique
+  lendStatus        Int
+  debtor            String
+  borrowToken       String
+  borrowAmount      Decimal
+  mortgageSCRAmount Decimal
+  interestRate      Decimal // 0.0001
+  borrowTimestamp   Int
+  borrowTx          String
+  overdueTimestamp  Int
+  paybackTimestamp  Int
+  paybackTx         String
+  interestDays      Int
+  interestAmount    Decimal
+}
+
+model ScoreLendBorrowTx {
+  id                        Int     @id @default(autoincrement())
+  tx                        String
+  blockNumber               Int
+  timestamp                 Int
+  handler                   String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
+  paramId                   String
+  paramDebtor               String
+  paramBorrowToken          String
+  paramBorrowAmount         Decimal
+  paramMortgageSCRAmount    Decimal
+  paramInterestRate         Int
+  paramInterestRateDecimals Int
+  paramBorrowTimestamp      Int
+  paramOverdueTimestamp     Int
+}
+
+model ScoreLendPaybackTx {
+  id                  Int     @id @default(autoincrement())
+  tx                  String
+  blockNumber         Int
+  timestamp           Int
+  handler             String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
+  paramId             String
+  paramInterestDays   BigInt
+  paramInterestAmount Decimal
+}
