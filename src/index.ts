@@ -1358,11 +1358,11 @@ async function main() {
 
   // subscribe events first, and then query history events
   const contracts = [
-    // ...ERC20Contracts,
-    // ...ERC721Contracts,
-    // ...ERC1155Contracts,
-    // ...SNSContracts,
-    // ...snsResolver,
+    ...ERC20Contracts,
+    ...ERC721Contracts,
+    ...ERC1155Contracts,
+    ...SNSContracts,
+    ...snsResolver,
     ...scoreLend,
   ];
   for (const contract of contracts) {
