@@ -1154,10 +1154,12 @@ async function main() {
             const mortgageSCRAmount: Prisma.Decimal = new Prisma.Decimal(
               param.args[4].toString(),
             ).dividedBy(scrDecimals);
-            const interestRate: number = param.args[5] as number;
-            const interestRateDecimals: number = param.args[6] as number;
-            const borrowTimestamp: number = param.args[7] as number;
-            const overdueTimestamp: number = param.args[8] as number;
+            const interestRate: number = Number(param.args[5] as bigint);
+            const interestRateDecimals: number = Number(
+              param.args[6] as bigint,
+            );
+            const borrowTimestamp: number = Number(param.args[7] as bigint);
+            const overdueTimestamp: number = Number(param.args[8] as bigint);
 
             console.log(
               `[ScoreLend.Borrow] Event: ${id} ${debtor} ${borrowToken} ${borrowAmount} ${mortgageSCRAmount} ${interestRate} ${interestRateDecimals} ${borrowTimestamp} ${overdueTimestamp} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
@@ -1198,7 +1200,7 @@ async function main() {
                   borrowAmount,
                   mortgageSCRAmount,
                   interestRate: new Prisma.Decimal(interestRate).dividedBy(
-                    new Prisma.Decimal(interestRateDecimals),
+                    Math.pow(10, interestRateDecimals),
                   ),
                   borrowTimestamp,
                   borrowTx: param.tx,
@@ -1273,7 +1275,7 @@ async function main() {
           for (const param of params) {
             // [[id, interestDays, interestAmount], , ]
             const id: string = param.args[0].toString();
-            const interestDays: number = param.args[1] as number;
+            const interestDays: number = Number(param.args[1] as bigint);
             const interestAmount: Prisma.Decimal = new Prisma.Decimal(
               param.args[2].toString(),
             ).dividedBy(usdtDecimals);

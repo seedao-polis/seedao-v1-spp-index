@@ -121,17 +121,17 @@ export namespace ScoreLendService {
       take: size,
     });
 
-    console.log({
-      where: {
-        ...debtorWhere,
-        ...lendStatusWhere,
-      },
-      orderBy: {
-        ...orderBy,
-      },
-      skip: page * size,
-      take: size,
-    });
+    // console.log({
+    //   where: {
+    //     ...debtorWhere,
+    //     ...lendStatusWhere,
+    //   },
+    //   orderBy: {
+    //     ...orderBy,
+    //   },
+    //   skip: page * size,
+    //   take: size,
+    // });
 
     return [total, lends];
   }

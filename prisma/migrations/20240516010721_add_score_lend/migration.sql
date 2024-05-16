@@ -53,7 +53,7 @@ CREATE TABLE "ScoreLendPaybackTx" (
     "timestamp" INTEGER NOT NULL,
     "handler" TEXT NOT NULL,
     "paramId" TEXT NOT NULL,
-    "paramInterestDays" BIGINT NOT NULL,
+    "paramInterestDays" INTEGER NOT NULL,
     "paramInterestAmount" DECIMAL(65,30) NOT NULL,
 
     CONSTRAINT "ScoreLendPaybackTx_pkey" PRIMARY KEY ("id")

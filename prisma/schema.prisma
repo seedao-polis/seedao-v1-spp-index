@@ -186,6 +186,6 @@ model ScoreLendPaybackTx {
   timestamp           Int
   handler             String // `query`: `Contract.queryFilter(...)`, `on`: `Contract.on(...)`
   paramId             String
-  paramInterestDays   BigInt
+  paramInterestDays   Int
   paramInterestAmount Decimal
 }

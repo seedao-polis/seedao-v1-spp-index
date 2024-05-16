@@ -88,6 +88,17 @@ export namespace scoreLendAPI {
       size,
     );
 
+    // when lend is overdue, need chang it's 'status' to overdue
+    // we choose to iterate the 'lends', because of the size of lends is very small, common is less than 10
+    for (const lend of lends) {
+      if (
+        lend.lendStatus == ScoreLendService.LEND_STATUS_IN_USE &&
+        timestamp > lend.overdueTimestamp
+      ) {
+        lend.lendStatus = ScoreLendService.LEND_STATUS_OVERDUE;
+      }
+    }
+
     resp.json({
       total,
       page,
