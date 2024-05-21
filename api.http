@@ -59,3 +59,6 @@ GET {{host}}/score_lend/lends?debtor=0x499F6aD9361743650f51fFEFDB3706a2eA3A3df1&
 
 ### lends 4
 GET {{host}}/score_lend/lends
+
+### lend
+GET {{host}}/score_lend/lend/0

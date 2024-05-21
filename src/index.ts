@@ -1483,6 +1483,7 @@ async function main() {
   // ScoreLend apis
   app.get("/score_lend/total_borrow", scoreLendAPI.totalBorrow);
   app.get("/score_lend/lends", scoreLendAPI.lends);
+  app.get("/score_lend/lend/:lendId", scoreLendAPI.lend);
 
   // start server
   app.listen(3000, () => {

@@ -105,4 +105,13 @@ export namespace scoreLendAPI {
       data: lends,
     });
   }
+
+  // `/score_lend/lend/1`
+  export async function lend(req: Request, resp: Response) {
+    const lendId: string = req.params.lendId;
+
+    const client: PrismaClient = resp.locals.client;
+
+    resp.json(await ScoreLendService.getByLendId(client, lendId));
+  }
 }
