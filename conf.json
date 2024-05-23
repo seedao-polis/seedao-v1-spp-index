@@ -3,7 +3,7 @@
     "ERC20": [
       {
         "name": "SCR",
-        "addr": "0xe4825a1a31a76f72befa47f7160b132aa03813e0",
+        "addr": "0xE4825A1a31a76f72befa47f7160B132AA03813E0",
         "decimals": 18,
         "chainRPC": "https://polygon-mainnet.g.alchemy.com/v2/-MLinGy2l91vLVZWXmRfNYf9DavMxaEA",
         "webhooks": {
