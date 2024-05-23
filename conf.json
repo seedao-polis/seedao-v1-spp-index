@@ -3,9 +3,9 @@
     "ERC20": [
       {
         "name": "SCR",
-        "addr": "0xc74DEE15a4700D5df797bDD3982EE649A3Bb8c6C",
+        "addr": "0xe4825a1a31a76f72befa47f7160b132aa03813e0",
         "decimals": 18,
-        "chainRPC": "https://eth-mainnet.g.alchemy.com/v2/FU0ujCat3OQd5hIqpddJ94SngVaeSxad",
+        "chainRPC": "https://polygon-mainnet.g.alchemy.com/v2/-MLinGy2l91vLVZWXmRfNYf9DavMxaEA",
         "webhooks": {
           "TransferEvent": []
         }
