@@ -89,10 +89,14 @@
           "scrDecimals": 18,
           "usdtDecimals": 6
         },
+        "BondNFT": {
+          "addr": "0x055f79172d148cb256b10033b1489C8444C2264d"
+        },
         "chainRPC": "https://polygon-amoy.g.alchemy.com/v2/MtUzrANQaADE09L6UupMImEhMD_u7-kS",
         "webhooks": {
           "Borrow": [],
-          "Payback": []
+          "Payback": [],
+          "Transfer": []
         }
       }
     }

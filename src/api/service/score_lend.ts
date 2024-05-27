@@ -135,6 +135,22 @@ export namespace ScoreLendService {
 
     return [total, lends];
   }
+
+  // ------ ------ ------ ------ ------ ------ ------ ------ ------
+
+  export async function updateDebtorByLendIdAndOldDebtor(
+    client: PrismaClient,
+    lendId: string,
+    oldDebtor: string,
+    newDebtor: string,
+  ): Promise<ScoreLend> {
+    return await client.scoreLend.update({
+      where: { lendId, debtor: oldDebtor },
+      data: {
+        debtor: newDebtor,
+      },
+    });
+  }
 }
 
 export namespace ScoreLendBorrowTxService {
