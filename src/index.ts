@@ -1355,8 +1355,8 @@ async function main() {
       ],
     },
     {
-      name: "BondNFT",
-      addr: scoreLendConf.BondNFT.addr,
+      name: "MBLNFT",
+      addr: scoreLendConf.MBLNFT.addr,
       fromBlock: (contractAddr: string): Promise<number> => {
         return ERC721TokenTransferTxService.getLatestBlockNumber(
           client,
@@ -1389,14 +1389,14 @@ async function main() {
             const tokenId: string = param.args[2].toString();
 
             console.log(
-              `[BondNFT.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
+              `[MBLNFT.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
             );
 
             // check if the event has been handled
             const transferTx =
               await ERC721TokenTransferTxService.getByContractAndTxAndHandler(
                 client,
-                scoreLendConf.BondNFT.addr,
+                scoreLendConf.MBLNFT.addr,
                 param.tx,
                 from,
                 to,
@@ -1406,7 +1406,7 @@ async function main() {
             if (transferTx == null) {
               // save tx
               await ERC721TokenTransferTxService.create(client, {
-                contractAddress: scoreLendConf.BondNFT.addr,
+                contractAddress: scoreLendConf.MBLNFT.addr,
                 tx: param.tx,
                 blockNumber: param.blockNumber,
                 timestamp: param.timestamp,
@@ -1419,7 +1419,7 @@ async function main() {
               // save data
               if (from === ethers.ZeroAddress) {
                 await ERC721TokenService.create(client, {
-                  contractAddress: scoreLendConf.BondNFT.addr,
+                  contractAddress: scoreLendConf.MBLNFT.addr,
                   owner: to,
                   tokenId: tokenId,
                   timestamp: param.timestamp,
@@ -1427,13 +1427,13 @@ async function main() {
               } else if (to === ethers.ZeroAddress) {
                 await ERC721TokenService.deleteByContractAndTokenId(
                   client,
-                  scoreLendConf.BondNFT.addr,
+                  scoreLendConf.MBLNFT.addr,
                   tokenId,
                 );
               } else {
                 await ERC721TokenService.updateOwnerByContractAndTokenId(
                   client,
-                  scoreLendConf.BondNFT.addr,
+                  scoreLendConf.MBLNFT.addr,
                   tokenId,
                   to,
                   param.timestamp,
@@ -1464,7 +1464,7 @@ async function main() {
               });
             } else {
               console.log(
-                `[BondNFT.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+                `[MBLNFT.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
               );
             }
           }
@@ -1476,8 +1476,8 @@ async function main() {
           ) {
             await sendWebhook(
               {
-                contractName: "BondNFT",
-                contractAddress: scoreLendConf.BondNFT.addr,
+                contractName: "MBLNFT",
+                contractAddress: scoreLendConf.MBLNFT.addr,
                 event: "Transfer",
                 data: unHandleEvents,
               },
