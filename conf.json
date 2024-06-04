@@ -85,12 +85,12 @@
       },
       "score_lend": {
         "ScoreLend": {
-          "addr": "0xa868415159Dc88506A9A55fe12E98B171491018d",
+          "addr": "0xcF5504045f74f6A51828B9D8766E4d96822311dE",
           "scrDecimals": 18,
           "usdtDecimals": 6
         },
         "MBLNFT": {
-          "addr": "0x496EBfDe236617821BAc1A2486993204378eE6C8"
+          "addr": "0x5eC2dDFdEACB1a4bB4145908bB29D833Fd810712"
         },
         "chainRPC": "https://polygon-amoy.g.alchemy.com/v2/MtUzrANQaADE09L6UupMImEhMD_u7-kS",
         "webhooks": {
