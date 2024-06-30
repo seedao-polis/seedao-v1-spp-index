@@ -1354,139 +1354,139 @@ async function main() {
         },
       ],
     },
-    {
-      name: "MBLNFT",
-      addr: scoreLendConf.MBLNFT.addr,
-      fromBlock: (contractAddr: string): Promise<number> => {
-        return ERC721TokenTransferTxService.getLatestBlockNumber(
-          client,
-          contractAddr,
-        );
-      },
-      abi: [
-        "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
-      ],
-      chainRPC: scoreLendConf.chainRPC,
-      events: ["Transfer"],
-      callbacks: [
-        async (params, handler) => {
-          const unHandleEvents: {
-            metadata: {
-              blockNumber: number;
-              timestamp: number;
-              tx: string;
-            };
-            parameters: {
-              from: string;
-              to: string;
-              tokenId: string;
-            };
-          }[] = [];
-          for (const param of params) {
-            // [[from, to, tokenId], , ]
-            const from: string = param.args[0] as string;
-            const to: string = param.args[1] as string;
-            const tokenId: string = param.args[2].toString();
-
-            console.log(
-              `[MBLNFT.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
-            );
-
-            // check if the event has been handled
-            const transferTx =
-              await ERC721TokenTransferTxService.getByContractAndTxAndHandler(
-                client,
-                scoreLendConf.MBLNFT.addr,
-                param.tx,
-                from,
-                to,
-                tokenId,
-                toggle(handler), // when executing `query`, checking if the event has been handled by `on`, and vice versa
-              );
-            if (transferTx == null) {
-              // save tx
-              await ERC721TokenTransferTxService.create(client, {
-                contractAddress: scoreLendConf.MBLNFT.addr,
-                tx: param.tx,
-                blockNumber: param.blockNumber,
-                timestamp: param.timestamp,
-                handler: handler,
-                paramFrom: from,
-                paramTo: to,
-                paramTokenId: tokenId,
-              });
-
-              // save data
-              if (from === ethers.ZeroAddress) {
-                await ERC721TokenService.create(client, {
-                  contractAddress: scoreLendConf.MBLNFT.addr,
-                  owner: to,
-                  tokenId: tokenId,
-                  timestamp: param.timestamp,
-                });
-              } else if (to === ethers.ZeroAddress) {
-                await ERC721TokenService.deleteByContractAndTokenId(
-                  client,
-                  scoreLendConf.MBLNFT.addr,
-                  tokenId,
-                );
-              } else {
-                await ERC721TokenService.updateOwnerByContractAndTokenId(
-                  client,
-                  scoreLendConf.MBLNFT.addr,
-                  tokenId,
-                  to,
-                  param.timestamp,
-                );
-
-                // ===== ScoreLend Special Logic =====
-                await ScoreLendService.updateDebtorByLendIdAndOldDebtor(
-                  client,
-                  tokenId,
-                  from,
-                  to,
-                );
-                // ===== ScoreLend Special Logic =====
-              }
-
-              // add to unHandleEvents
-              unHandleEvents.push({
-                metadata: {
-                  blockNumber: param.blockNumber,
-                  timestamp: param.timestamp,
-                  tx: param.tx,
-                },
-                parameters: {
-                  from: from,
-                  to: to,
-                  tokenId: tokenId,
-                },
-              });
-            } else {
-              console.log(
-                `[MBLNFT.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
-              );
-            }
-          }
-
-          // send webhook
-          if (
-            unHandleEvents.length != 0 &&
-            scoreLendConf.webhooks.Transfer.length != 0
-          ) {
-            await sendWebhook(
-              {
-                contractName: "MBLNFT",
-                contractAddress: scoreLendConf.MBLNFT.addr,
-                event: "Transfer",
-                data: unHandleEvents,
-              },
-              scoreLendConf.webhooks.Transfer,
-            );
-          }
-        },
-      ],
-    },
+    // {
+    //   name: "MBLNFT",
+    //   addr: scoreLendConf.MBLNFT.addr,
+    //   fromBlock: (contractAddr: string): Promise<number> => {
+    //     return ERC721TokenTransferTxService.getLatestBlockNumber(
+    //       client,
+    //       contractAddr,
+    //     );
+    //   },
+    //   abi: [
+    //     "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
+    //   ],
+    //   chainRPC: scoreLendConf.chainRPC,
+    //   events: ["Transfer"],
+    //   callbacks: [
+    //     async (params, handler) => {
+    //       const unHandleEvents: {
+    //         metadata: {
+    //           blockNumber: number;
+    //           timestamp: number;
+    //           tx: string;
+    //         };
+    //         parameters: {
+    //           from: string;
+    //           to: string;
+    //           tokenId: string;
+    //         };
+    //       }[] = [];
+    //       for (const param of params) {
+    //         // [[from, to, tokenId], , ]
+    //         const from: string = param.args[0] as string;
+    //         const to: string = param.args[1] as string;
+    //         const tokenId: string = param.args[2].toString();
+    //
+    //         console.log(
+    //           `[MBLNFT.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ${param.timestamp}`,
+    //         );
+    //
+    //         // check if the event has been handled
+    //         const transferTx =
+    //           await ERC721TokenTransferTxService.getByContractAndTxAndHandler(
+    //             client,
+    //             scoreLendConf.MBLNFT.addr,
+    //             param.tx,
+    //             from,
+    //             to,
+    //             tokenId,
+    //             toggle(handler), // when executing `query`, checking if the event has been handled by `on`, and vice versa
+    //           );
+    //         if (transferTx == null) {
+    //           // save tx
+    //           await ERC721TokenTransferTxService.create(client, {
+    //             contractAddress: scoreLendConf.MBLNFT.addr,
+    //             tx: param.tx,
+    //             blockNumber: param.blockNumber,
+    //             timestamp: param.timestamp,
+    //             handler: handler,
+    //             paramFrom: from,
+    //             paramTo: to,
+    //             paramTokenId: tokenId,
+    //           });
+    //
+    //           // save data
+    //           if (from === ethers.ZeroAddress) {
+    //             await ERC721TokenService.create(client, {
+    //               contractAddress: scoreLendConf.MBLNFT.addr,
+    //               owner: to,
+    //               tokenId: tokenId,
+    //               timestamp: param.timestamp,
+    //             });
+    //           } else if (to === ethers.ZeroAddress) {
+    //             await ERC721TokenService.deleteByContractAndTokenId(
+    //               client,
+    //               scoreLendConf.MBLNFT.addr,
+    //               tokenId,
+    //             );
+    //           } else {
+    //             await ERC721TokenService.updateOwnerByContractAndTokenId(
+    //               client,
+    //               scoreLendConf.MBLNFT.addr,
+    //               tokenId,
+    //               to,
+    //               param.timestamp,
+    //             );
+    //
+    //             // ===== ScoreLend Special Logic =====
+    //             await ScoreLendService.updateDebtorByLendIdAndOldDebtor(
+    //               client,
+    //               tokenId,
+    //               from,
+    //               to,
+    //             );
+    //             // ===== ScoreLend Special Logic =====
+    //           }
+    //
+    //           // add to unHandleEvents
+    //           unHandleEvents.push({
+    //             metadata: {
+    //               blockNumber: param.blockNumber,
+    //               timestamp: param.timestamp,
+    //               tx: param.tx,
+    //             },
+    //             parameters: {
+    //               from: from,
+    //               to: to,
+    //               tokenId: tokenId,
+    //             },
+    //           });
+    //         } else {
+    //           console.log(
+    //             `[MBLNFT.Transfer] Event: ${from} ${to} ${tokenId} ${param.blockNumber} ${param.tx} ALREADY HANDLED !!`,
+    //           );
+    //         }
+    //       }
+    //
+    //       // send webhook
+    //       if (
+    //         unHandleEvents.length != 0 &&
+    //         scoreLendConf.webhooks.Transfer.length != 0
+    //       ) {
+    //         await sendWebhook(
+    //           {
+    //             contractName: "MBLNFT",
+    //             contractAddress: scoreLendConf.MBLNFT.addr,
+    //             event: "Transfer",
+    //             data: unHandleEvents,
+    //           },
+    //           scoreLendConf.webhooks.Transfer,
+    //         );
+    //       }
+    //     },
+    //   ],
+    // },
   ];
 
   // subscribe events first, and then query history events
