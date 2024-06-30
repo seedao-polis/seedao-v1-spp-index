@@ -25,6 +25,18 @@ GET {{host}}/metadata/5261867019348775833446523831246977971445436970042748687164
 Accept: application/json
 
 ### ----- ----- ----- ----- ----- ----- ----- -----
+### ----- snapshot
+
+GET {{host}}/snapshot/erc20/0xe4825a1a31a76f72befa47f7160b132aa03813e0/1716479100
+Accept: application/json
+
+
+
+@xs 推总，dev上的spp-indexer会自己更新scr的数据吗？目前这个取snapshot的地址没返回，镜像已经更新。我记得你之前是要导数据库的
+
+https://test-spp-indexer.seedao.tech/snapshot/erc20/0xE4825A1a31a76f72befa47f7160B132AA03813E0/1716479100
+
+### ----- ----- ----- ----- ----- ----- ----- -----
 ### ----- insight
 
 ###

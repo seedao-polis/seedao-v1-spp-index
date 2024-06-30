@@ -85,14 +85,14 @@
       },
       "score_lend": {
         "ScoreLend": {
-          "addr": "0xcF5504045f74f6A51828B9D8766E4d96822311dE",
+          "addr": "0xaB9B36BC114c433182ebE840Fa966A5808883661",
           "scrDecimals": 18,
           "usdtDecimals": 6
         },
         "MBLNFT": {
-          "addr": "0x5eC2dDFdEACB1a4bB4145908bB29D833Fd810712"
+          "addr": "0xC40EB71f46baE4d2395734C14af3bd86960F2c4c"
         },
-        "chainRPC": "https://polygon-amoy.g.alchemy.com/v2/MtUzrANQaADE09L6UupMImEhMD_u7-kS",
+        "chainRPC": "https://polygon-mainnet.g.alchemy.com/v2/-MLinGy2l91vLVZWXmRfNYf9DavMxaEA",
         "webhooks": {
           "Borrow": [],
           "Payback": [],
