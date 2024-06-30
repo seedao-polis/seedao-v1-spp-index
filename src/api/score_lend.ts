@@ -112,6 +112,18 @@ export namespace scoreLendAPI {
 
     const client: PrismaClient = resp.locals.client;
 
-    resp.json(await ScoreLendService.getByLendId(client, lendId));
+    const lend = await ScoreLendService.getByLendId(client, lendId);
+
+    // when lend is overdue, need chang it's 'status' to overdue
+    const timestamp = currentUTC0Timestamp();
+    if (
+      lend != null &&
+      lend.lendStatus == ScoreLendService.LEND_STATUS_IN_USE &&
+      timestamp > lend.overdueTimestamp
+    ) {
+      lend.lendStatus = ScoreLendService.LEND_STATUS_OVERDUE;
+    }
+
+    resp.json(lend);
   }
 }
