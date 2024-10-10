@@ -15,7 +15,7 @@
       {
         "name": "SEED",
         "addr": "0x30093266E34a816a53e302bE3e59a93B52792FD4",
-        "chainRPC": "https://eth-mainnet.g.alchemy.com/v2/FU0ujCat3OQd5hIqpddJ94SngVaeSxad",
+        "chainRPC": "https://eth-mainnet.g.alchemy.com/v2/YuNeXto27ejHnOIGOwxl2N_cHCfyLyLE",
         "webhooks": {
           "TransferEvent": []
         }
@@ -25,7 +25,7 @@
       {
         "name": "NODE",
         "addr": "0x9d34D407D8586478b3e4c39BE633ED3D7be1c80C",
-        "chainRPC": "https://eth-mainnet.g.alchemy.com/v2/FU0ujCat3OQd5hIqpddJ94SngVaeSxad",
+        "chainRPC": "https://eth-mainnet.g.alchemy.com/v2/YuNeXto27ejHnOIGOwxl2N_cHCfyLyLE",
         "webhooks": {
           "TransferEvent": []
         }
