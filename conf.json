@@ -55,6 +55,24 @@
         "webhooks": {
           "TransferEvent": []
         }
+      },
+      {
+        "name": "CityHallMembers",
+        "_comment": "市政厅成员",
+        "addr": "0x7a5634B2f0453FE140A5ED5e0acC44e38C7FceDE",
+        "chainRPC": "https://polygon-mainnet.g.alchemy.com/v2/VAmwyQ05S3uzgyde2MyyuekgiWnTLA1C",
+        "webhooks": {
+          "TransferEvent": []
+        }
+      },
+      {
+        "name": "SmallCommittee",
+        "_comment": "小额委员会",
+        "addr": "0x4c844bDcEA0Be193c685ddE2Bb5c5609486a6B38",
+        "chainRPC": "https://polygon-mainnet.g.alchemy.com/v2/VAmwyQ05S3uzgyde2MyyuekgiWnTLA1C",
+        "webhooks": {
+          "TransferEvent": []
+        }
       }
     ],
     "NO_ERC_STD": {
