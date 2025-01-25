@@ -6,6 +6,8 @@ FROM node:lts-alpine as BUILD
 # Set the working directory inside the container
 WORKDIR /app
 
+RUN apk add --no-cache libc6-compat openssl
+
 # Copy the package.json and yarn.lock files to the container
 COPY package*.json yarn.lock ./
 
@@ -25,6 +27,8 @@ FROM node:lts-alpine
 
 # Set the working directory inside the container
 WORKDIR /app
+
+RUN apk add --no-cache libc6-compat openssl
 
 # Copy the built application files from the previous stage
 COPY --from=BUILD /app/dist ./dist
