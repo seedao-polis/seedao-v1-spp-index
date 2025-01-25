@@ -53,6 +53,7 @@ import {
   ScoreLendService,
 } from "./api/service/score_lend";
 import { scoreLendAPI } from "./api/score_lend";
+import { computeNodeSbtAPI } from "./api/compute_node_sbt";
 
 interface ContractConf {
   name: string;
@@ -1617,6 +1618,9 @@ async function main() {
   app.get("/score_lend/total_borrow", scoreLendAPI.totalBorrow);
   app.get("/score_lend/lends", scoreLendAPI.lends);
   app.get("/score_lend/lend/:lendId", scoreLendAPI.lend);
+
+  // compute node sbt num
+  app.get("/computenodesbt", computeNodeSbtAPI.getComputeNodeSbt);
 
   // start server
   app.listen(3000, () => {
