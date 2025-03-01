@@ -68,6 +68,72 @@ interface ERC20Conf extends ContractConf {
   decimals: number;
 }
 
+function startServer(client: PrismaClient) {
+  // instance Express App
+  const app = express();
+
+  // middleware
+  app.use(cors());
+  app.use(express.json());
+  app.use((req: Request, resp: Response, next: NextFunction) => {
+    resp.locals.client = client;
+    next();
+  });
+  // sns apis
+  app.get("/sns/all", snsAPI.all);
+  app.get("/sns/list_by_wallet/:wallet", snsAPI.listByWallet);
+  app.get("/sns/by_token_id/:tokenId", snsAPI.byTokenId);
+  app.get("/sns/by_name", snsAPI.byName);
+  app.get("/sns/resolver/get_address", snsResolverAPI.address);
+  app.post("/sns/resolver/get_addresses", snsResolverAPI.addresses);
+  app.get("/sns/resolver/get_name", snsResolverAPI.name);
+  app.post("/sns/resolver/get_names", snsResolverAPI.names);
+  // seed apis
+  app.get("/seed/images", seedImageAPI.images);
+
+  // snapshot apis
+  app.get("/snapshot/erc20/:contract/:timestamp", erc20SnapshotAPI.snapshot);
+  app.get("/snapshot/erc721/:contract/:timestamp", erc721SnapshotAPI.snapshot);
+  app.get(
+    "/snapshot/erc1155/:contract/:timestamp",
+    erc1155SnapshotAPI.snapshot,
+  );
+  app.get("/snapshot/sns/:timestamp", snsSnapshotAPI.snapshot);
+
+  // insight apis
+  app.get(
+    "/insight/erc20/total_supply/:contractAddress",
+    insightAPI.ERC20TotalSupply,
+  );
+  app.get(
+    "/insight/erc721/total_supply/:contractAddress",
+    insightAPI.ERC721TotalSupply,
+  );
+  app.get(
+    "/insight/erc1155/total_supply_of_tokenId/:contractAddress/:tokenId",
+    insightAPI.ERC1155TotalSupplyOfTokenId,
+  );
+  app.get(
+    "/insight/erc1155/total_supply/:contractAddress",
+    insightAPI.ERC1155TotalSupply,
+  );
+
+  // ScoreLend apis
+  app.get("/score_lend/total_borrow", scoreLendAPI.totalBorrow);
+  app.get("/score_lend/lends", scoreLendAPI.lends);
+  app.get("/score_lend/lend/:lendId", scoreLendAPI.lend);
+
+  // compute node sbt num
+  app.get("/computenodesbt", computeNodeSbtAPI.getComputeNodeSbt);
+
+  // start server
+  app.listen(3000, () => {
+    console.log(
+      `${new Date().toString()} Server is running on http://localhost:3000`,
+    );
+  });
+}
+
 async function main() {
   // @ts-ignore
   BigInt.prototype.toJSON = function () {
@@ -76,6 +142,9 @@ async function main() {
 
   // init database
   const client = new PrismaClient();
+
+  // start server
+  startServer(client);
 
   // 'ERC20' 'ERC721' 'ERC1155' Contracts
   const ERC20Contracts: Contract[] = await Promise.all(
@@ -1563,70 +1632,6 @@ async function main() {
       );
       await queryHistoryEvents(contract);
     }
-  });
-
-  // instance Express App
-  const app = express();
-
-  // middleware
-  app.use(cors());
-  app.use(express.json());
-  app.use((req: Request, resp: Response, next: NextFunction) => {
-    resp.locals.client = client;
-    next();
-  });
-  // sns apis
-  app.get("/sns/all", snsAPI.all);
-  app.get("/sns/list_by_wallet/:wallet", snsAPI.listByWallet);
-  app.get("/sns/by_token_id/:tokenId", snsAPI.byTokenId);
-  app.get("/sns/by_name", snsAPI.byName);
-  app.get("/sns/resolver/get_address", snsResolverAPI.address);
-  app.post("/sns/resolver/get_addresses", snsResolverAPI.addresses);
-  app.get("/sns/resolver/get_name", snsResolverAPI.name);
-  app.post("/sns/resolver/get_names", snsResolverAPI.names);
-  // seed apis
-  app.get("/seed/images", seedImageAPI.images);
-
-  // snapshot apis
-  app.get("/snapshot/erc20/:contract/:timestamp", erc20SnapshotAPI.snapshot);
-  app.get("/snapshot/erc721/:contract/:timestamp", erc721SnapshotAPI.snapshot);
-  app.get(
-    "/snapshot/erc1155/:contract/:timestamp",
-    erc1155SnapshotAPI.snapshot,
-  );
-  app.get("/snapshot/sns/:timestamp", snsSnapshotAPI.snapshot);
-
-  // insight apis
-  app.get(
-    "/insight/erc20/total_supply/:contractAddress",
-    insightAPI.ERC20TotalSupply,
-  );
-  app.get(
-    "/insight/erc721/total_supply/:contractAddress",
-    insightAPI.ERC721TotalSupply,
-  );
-  app.get(
-    "/insight/erc1155/total_supply_of_tokenId/:contractAddress/:tokenId",
-    insightAPI.ERC1155TotalSupplyOfTokenId,
-  );
-  app.get(
-    "/insight/erc1155/total_supply/:contractAddress",
-    insightAPI.ERC1155TotalSupply,
-  );
-
-  // ScoreLend apis
-  app.get("/score_lend/total_borrow", scoreLendAPI.totalBorrow);
-  app.get("/score_lend/lends", scoreLendAPI.lends);
-  app.get("/score_lend/lend/:lendId", scoreLendAPI.lend);
-
-  // compute node sbt num
-  app.get("/computenodesbt", computeNodeSbtAPI.getComputeNodeSbt);
-
-  // start server
-  app.listen(3000, () => {
-    console.log(
-      `${new Date().toString()} Server is running on http://localhost:3000`,
-    );
   });
 }
 
