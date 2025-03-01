@@ -45,26 +45,40 @@ export async function queryHistoryEvents(contract: Contract) {
   // cache chain's block data
   const blocks = new Map<number, ethers.Block>();
 
+  // Process events in batches of 500 blocks if the range is too large
+  const BATCH_SIZE = 400;
+  const startBlock = fromBlock + 1;
+
   for (let i = 0; i < contract.events.length; i++) {
     console.log(
-      `query ${contract.name}'s ${contract.events[i]} event from block[${
-        fromBlock + 1
-      }] to block[${latestBlockNumber}]`,
+      `query ${contract.name}'s ${contract.events[i]} event from block[${startBlock}] to block[${latestBlockNumber}]`,
     );
 
     const filter = c.filters[contract.events[i]]();
-    const events = await c.queryFilter(
-      filter,
-      fromBlock + 1,
-      latestBlockNumber,
-    );
+    let allEvents = [];
 
-    if (events.length == 0) {
+    if (latestBlockNumber - startBlock > BATCH_SIZE) {
+      // Process in batches
+      for (let currentBlock = startBlock; currentBlock < latestBlockNumber; currentBlock += BATCH_SIZE) {
+        const endBlock = Math.min(currentBlock + BATCH_SIZE - 1, latestBlockNumber);
+        console.log(`Processing batch from block[${currentBlock}] to block[${endBlock}]`);
+        const batchEvents = await c.queryFilter(filter, currentBlock, endBlock);
+        if (batchEvents.length == 0) {
+          continue;
+        }
+        allEvents = allEvents.concat(batchEvents);
+      }
+    } else {
+      // Process in single batch
+      allEvents = await c.queryFilter(filter, startBlock, latestBlockNumber);
+    }
+
+    if (allEvents.length == 0) {
       continue;
     }
 
     const param: CallbackParam[] = [];
-    for (const event of events) {
+    for (const event of allEvents) {
       const result = c.interface.decodeEventLog(
         contract.events[i],
         event.data,
