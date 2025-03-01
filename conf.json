@@ -11,7 +11,16 @@
         }
       }
     ],
-    "ERC721": [],
+    "ERC721": [
+      {
+        "name": "SEED",
+        "addr": "0x30093266E34a816a53e302bE3e59a93B52792FD4",
+        "chainRPC": "https://eth-mainnet.g.alchemy.com/v2/VAmwyQ05S3uzgyde2MyyuekgiWnTLA1C",
+        "webhooks": {
+          "TransferEvent": []
+        }
+      }
+    ],
     "ERC1155": [
       {
         "name": "NODE",
