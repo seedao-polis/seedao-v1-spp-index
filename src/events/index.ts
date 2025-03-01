@@ -55,7 +55,7 @@ export async function queryHistoryEvents(contract: Contract) {
     );
 
     const filter = c.filters[contract.events[i]]();
-    let allEvents = [];
+    let allEvents: ethers.Log[] = [];
 
     if (latestBlockNumber - startBlock > BATCH_SIZE) {
       // Process in batches
