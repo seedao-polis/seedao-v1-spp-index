@@ -31,14 +31,6 @@
         }
       },
       {
-        "name": "EnsoulSBT",
-        "addr": "0x2221F5d189c611B09D7f7382Ce557ec66365C8fc",
-        "chainRPC": "https://polygon-mainnet.g.alchemy.com/v2/VAmwyQ05S3uzgyde2MyyuekgiWnTLA1C",
-        "webhooks": {
-          "TransferEvent": []
-        }
-      },
-      {
         "name": "Onboarding",
         "_comment": "only handle #157 token",
         "addr": "0x0D9ea891B4C30e17437D00151399990ED7965F00",
