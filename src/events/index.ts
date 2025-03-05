@@ -25,7 +25,8 @@ export interface Contract {
   ) => Promise<void>)[]; // callbacks for wanting to listen events
 }
 
-export async function queryHistoryEvents(contract: Contract) {
+// blockCount 指定需要索引的区块数量，0表示全部
+export async function queryHistoryEvents(contract: Contract, blockCount: number = 0) {
   if (contract.events.length == 0 || contract.callbacks.length == 0) {
     return;
   }
@@ -46,8 +47,12 @@ export async function queryHistoryEvents(contract: Contract) {
   const blocks = new Map<number, ethers.Block>();
 
   // Process events in batches of 500 blocks if the range is too large
-  const BATCH_SIZE = 400;
-  const startBlock = fromBlock + 1;
+  const BATCH_SIZE = 450;
+  let startBlock = fromBlock + 1;
+
+  if (blockCount != 0) {
+    startBlock = latestBlockNumber - blockCount;
+  }
 
   for (let i = 0; i < contract.events.length; i++) {
     console.log(
