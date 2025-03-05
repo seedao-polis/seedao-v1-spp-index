@@ -1619,7 +1619,7 @@ async function main() {
     await subscribeNewEvents(contract, provider);
     // <--------------------
 
-    await queryHistoryEvents(contract);
+    await queryHistoryEvents(contract, 0);
   }
 
   // executing 'queryHistoryEvents()' every 5 minutes
@@ -1630,7 +1630,7 @@ async function main() {
       console.log(
         `CronTask: executing 'queryHistoryEvents()'... [contract=${contract.name}]`,
       );
-      await queryHistoryEvents(contract);
+      await queryHistoryEvents(contract, 8_00); // 必须大于 5 分钟的出块数量，因为这里会每隔 5 分钟执行一次
     }
   });
 }
