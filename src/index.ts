@@ -1619,7 +1619,7 @@ async function main() {
     await subscribeNewEvents(contract, provider);
     // <--------------------
 
-    await queryHistoryEvents(contract);
+    await queryHistoryEvents(contract, 0);
   }
 
   // executing 'queryHistoryEvents()' every 5 minutes
@@ -1630,7 +1630,7 @@ async function main() {
       console.log(
         `CronTask: executing 'queryHistoryEvents()'... [contract=${contract.name}]`,
       );
-      await queryHistoryEvents(contract);
+      await queryHistoryEvents(contract, 400);
     }
   });
 }
