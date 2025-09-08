@@ -1,5 +1,48 @@
 import { ethers, WebSocketProvider, JsonRpcProvider } from "ethers";
 
+// simple sleep helper and retry wrapper to mitigate provider rate limits (429)
+const BATCH_DELAY_MS = 50; // delay between batches
+const RETRY_BASE_DELAY_MS = 200; // base delay for retry backoff
+const RETRY_MAX_ATTEMPTS = 5;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+type RpcError = {
+  code?: number;
+  message?: string;
+  error?: { code?: number; message?: string };
+};
+
+async function retryWithBackoff<T>(fn: () => Promise<T>, label: string): Promise<T> {
+  let attempt = 0;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    try {
+      return await fn();
+    } catch (err: unknown) {
+      const e = (err || {}) as RpcError;
+      const code = e.code ?? e.error?.code;
+      const message: string = (e.message || e.error?.message || "");
+      const isRetryable =
+        code === 429 ||
+        /rate limit|compute units per second|timeout|timed out|temporarily unavailable/i.test(
+          message,
+        );
+      if (!isRetryable || attempt >= RETRY_MAX_ATTEMPTS) {
+        throw err;
+      }
+      const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt) + Math.floor(Math.random() * 100);
+      if (attempt === 0) {
+        console.warn(`[retry] ${label} failed with ${code || "ERR"}: ${message}. retrying...`);
+      }
+      await sleep(delay);
+      attempt++;
+    }
+  }
+}
+
 export type CallbackParam = {
   args: any[];
   blockNumber: number;
@@ -18,6 +61,7 @@ export interface Contract {
   fromBlock: (contractAddr: string) => Promise<number>;
   abi: string[];
   chainRPC: string;
+  chainId?: number; // optional static chain id to reduce eth_chainId calls
   events: string[]; // want to listen events
   callbacks: ((
     param: CallbackParam[],
@@ -35,9 +79,15 @@ export async function queryHistoryEvents(contract: Contract, blockCount: number 
     throw new Error("events and callbacks length not match");
   }
 
-  const provider = new JsonRpcProvider(contract.chainRPC);
+  const provider =
+    typeof contract.chainId === "number"
+      ? new JsonRpcProvider(contract.chainRPC, contract.chainId)
+      : new JsonRpcProvider(contract.chainRPC);
   const fromBlock = await contract.fromBlock(contract.addr);
-  let latestBlockNumber = await provider.getBlockNumber();
+  let latestBlockNumber = await retryWithBackoff(
+    () => provider.getBlockNumber(),
+    "provider.getBlockNumber",
+  );
   latestBlockNumber =
     latestBlockNumber > fromBlock + 1 ? latestBlockNumber : fromBlock + 1;
 
@@ -68,17 +118,22 @@ export async function queryHistoryEvents(contract: Contract, blockCount: number 
       for (let currentBlock = startBlock; currentBlock < latestBlockNumber; currentBlock += BATCH_SIZE) {
         const endBlock = Math.min(currentBlock + BATCH_SIZE - 1, latestBlockNumber);
         console.log(`Processing batch from block[${currentBlock}] to block[${endBlock}]`);
-        const batchEvents = await c.queryFilter(filter, currentBlock, endBlock);
-        if (batchEvents.length == 0) {
-          continue;
+        const batchEvents = await retryWithBackoff(
+          () => c.queryFilter(filter, currentBlock, endBlock),
+          `c.queryFilter[${currentBlock}-${endBlock}]`,
+        );
+        if (batchEvents.length > 0) {
+          allEvents = allEvents.concat(batchEvents);
         }
-        allEvents = allEvents.concat(batchEvents);
-        // throttle between batches to avoid rate limits
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        // throttle between batches to avoid rate limits (always wait)
+        await sleep(BATCH_DELAY_MS);
       }
     } else {
       // Process in single batch
-      allEvents = await c.queryFilter(filter, startBlock, latestBlockNumber);
+      allEvents = await retryWithBackoff(
+        () => c.queryFilter(filter, startBlock, latestBlockNumber),
+        `c.queryFilter[${startBlock}-${latestBlockNumber}]`,
+      );
     }
 
     if (allEvents.length == 0) {
@@ -99,7 +154,10 @@ export async function queryHistoryEvents(contract: Contract, blockCount: number 
       // );
       let block = blocks.get(event.blockNumber);
       if (block == undefined) {
-        const b = await provider.getBlock(event.blockNumber);
+        const b = await retryWithBackoff(
+          () => provider.getBlock(event.blockNumber),
+          `provider.getBlock(${event.blockNumber})`,
+        );
         if (b == null) {
           throw new Error(`call 'getBlock(${event.blockNumber})' failed`);
         }
@@ -127,6 +185,8 @@ export async function queryHistoryEvents(contract: Contract, blockCount: number 
       `----- execute [HISTORY] ${contract.name}'s callback[${i}] (HistoryEventCount=${param.length}) -----`,
     );
     await contract.callbacks[i](param, "query");
+    // small delay between different event types
+    await sleep(BATCH_DELAY_MS);
   }
 }
 
