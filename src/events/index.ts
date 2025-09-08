@@ -73,6 +73,8 @@ export async function queryHistoryEvents(contract: Contract, blockCount: number 
           continue;
         }
         allEvents = allEvents.concat(batchEvents);
+        // throttle between batches to avoid rate limits
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
     } else {
       // Process in single batch
