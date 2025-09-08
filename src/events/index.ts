@@ -47,7 +47,8 @@ export async function queryHistoryEvents(contract: Contract, blockCount: number 
   const blocks = new Map<number, ethers.Block>();
 
   // Process events in batches of 500 blocks if the range is too large
-  const BATCH_SIZE = 450;
+  // const BATCH_SIZE = 450;
+  const BATCH_SIZE = 10; // for fix "Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x48993ae, 0x48993b7]. Upgrade to PAYG for expanded block range."
   let startBlock = fromBlock + 1;
 
   if (blockCount != 0) {
