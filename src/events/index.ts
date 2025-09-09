@@ -10,9 +10,12 @@ function sleep(ms: number): Promise<void> {
 }
 
 type RpcError = {
-  code?: number;
+  // ethers can surface string codes like 'SERVER_ERROR' or numeric codes like 429
+  code?: number | string;
   message?: string;
-  error?: { code?: number; message?: string };
+  status?: number;
+  response?: { status?: number };
+  error?: { code?: number | string; message?: string; status?: number };
 };
 
 async function retryWithBackoff<T>(fn: () => Promise<T>, label: string): Promise<T> {
@@ -22,12 +25,29 @@ async function retryWithBackoff<T>(fn: () => Promise<T>, label: string): Promise
     try {
       return await fn();
     } catch (err: unknown) {
-      const e = (err || {}) as RpcError;
+      const e = (err || {}) as RpcError & { name?: string };
       const code = e.code ?? e.error?.code;
+      const status =
+        (typeof e.status === "number" ? e.status : undefined) ??
+        (typeof e.response?.status === "number" ? e.response?.status : undefined);
       const message: string = (e.message || e.error?.message || "");
+
+      // Normalize numeric code if possible
+      const numericCode = typeof code === "number" ? code : undefined;
+
       const isRetryable =
-        code === 429 ||
-        /rate limit|compute units per second|timeout|timed out|temporarily unavailable/i.test(
+        // HTTP Too Many Requests or common 5xx
+        numericCode === 429 ||
+        numericCode === 500 ||
+        numericCode === 502 ||
+        numericCode === 503 ||
+        numericCode === 504 ||
+        // HTTP status present
+        (typeof status === "number" && status >= 500 && status < 600) ||
+        // ethers wraps as 'SERVER_ERROR'
+        code === "SERVER_ERROR" ||
+        // known transient/network/rate-limited phrases
+        /rate limit|compute units per second|timeout|timed out|temporarily unavailable|service unavailable|gateway timeout|fetch failed|socket hang up|ECONNRESET|ETIMEDOUT|ENETUNREACH|EAI_AGAIN/i.test(
           message,
         );
       if (!isRetryable || attempt >= RETRY_MAX_ATTEMPTS) {
