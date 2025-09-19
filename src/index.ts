@@ -144,14 +144,17 @@ async function main() {
 
   // start server
   startServer(client);
+  console.log("[startup] HTTP server started. Initializing indexer...");
 
   // 'ERC20' 'ERC721' 'ERC1155' Contracts
+  console.log("[startup] building ERC20 contracts from conf.json...");
   const ERC20Contracts: Contract[] = await Promise.all(
     conf.contracts.ERC20.map(async (c: ERC20Conf): Promise<Contract> => {
       const decimalD = new Prisma.Decimal(Math.pow(10, c.decimals));
       return {
         name: c.name,
         addr: c.addr,
+        chainId: inferChainIdFromRpc(c.chainRPC),
         fromBlock: (contractAddr: string): Promise<number> => {
           return ERC20TokenTransferTxService.getLatestBlockNumber(
             client,
@@ -287,11 +290,13 @@ async function main() {
       };
     }),
   );
+  console.log("[startup] building ERC721 contracts from conf.json...");
   const ERC721Contracts: Contract[] = await Promise.all(
     conf.contracts.ERC721.map(async (c: ContractConf): Promise<Contract> => {
       return {
         name: c.name,
         addr: c.addr,
+        chainId: inferChainIdFromRpc(c.chainRPC),
         fromBlock: (contractAddr: string): Promise<number> => {
           return ERC721TokenTransferTxService.getLatestBlockNumber(
             client,
@@ -415,11 +420,13 @@ async function main() {
       };
     }),
   );
+  console.log("[startup] building ERC1155 contracts from conf.json...");
   const ERC1155Contracts: Contract[] = await Promise.all(
     conf.contracts.ERC1155.map(async (c: ContractConf): Promise<Contract> => {
       return {
         name: c.name,
         addr: c.addr,
+        chainId: inferChainIdFromRpc(c.chainRPC),
         fromBlock: async (contractAddr: string): Promise<number> => {
           return Math.max(
             0,
@@ -728,10 +735,12 @@ async function main() {
   );
   // 'SeeDAORegistrarController' 'BaseRegistrar' Contract
   const snsConf = conf.contracts.NO_ERC_STD.sns;
+  console.log("[startup] building NO_ERC_STD.sns contracts from conf.json...");
   const SNSContracts: Contract[] = [
     {
       name: "SeeDAORegistrarController",
       addr: snsConf.SeeDAORegistrarController.addr,
+      chainId: inferChainIdFromRpc(snsConf.chainRPC),
       fromBlock: (_: string): Promise<number> => {
         return SNSNameregisteredTxService.getLatestBlockNumber(client);
       },
@@ -839,6 +848,7 @@ async function main() {
     {
       name: "BaseRegistrar",
       addr: snsConf.BaseRegistrar.addr,
+      chainId: inferChainIdFromRpc(snsConf.chainRPC),
       fromBlock: (_: string): Promise<number> => {
         return ERC721TokenTransferTxService.getLatestBlockNumber(
           client,
@@ -960,6 +970,7 @@ async function main() {
     },
   ];
   // 'PublicResolver' Contract
+  console.log("[startup] building NO_ERC_STD.sns_resolver contracts from conf.json...");
   const resolverConf = conf.contracts.NO_ERC_STD.sns_resolver;
   const snsResolver: Contract[] = [
     {
@@ -1165,7 +1176,9 @@ async function main() {
       ],
     },
   ];
+  console.log(`[startup] NO_ERC_STD.sns_resolver built: ${snsResolver.length}`);
   // 'ScoreLend' Contract
+  console.log("[startup] building NO_ERC_STD.score_lend contracts from conf.json...");
   const scoreLendConf = conf.contracts.NO_ERC_STD.score_lend;
   const scoreLend: Contract[] = [
     {
@@ -1554,10 +1567,8 @@ async function main() {
     //         );
     //       }
     //     },
-    //   ],
-    // },
   ];
-
+  console.log("[startup] assembling contracts array...");
   // subscribe events first, and then query history events
   const contracts = [
     ...ERC20Contracts,
@@ -1567,6 +1578,9 @@ async function main() {
     ...snsResolver,
     ...scoreLend,
   ];
+  console.log(
+    `[startup] contracts built: ERC20=${ERC20Contracts.length}, ERC721=${ERC721Contracts.length}, ERC1155=${ERC1155Contracts.length}, SNS=${SNSContracts.length}, snsResolver=${snsResolver.length}, scoreLend=${scoreLend.length}, total=${contracts.length}`,
+  );
   // 简单根据 RPC URL 推断 chainId，避免 JsonRpcProvider 初始化阶段的网络探测
   function inferChainIdFromRpc(rpc: string): number | undefined {
     const u = rpc.toLowerCase();
@@ -1593,29 +1607,11 @@ async function main() {
   // 先为所有合约建立 provider 并完成订阅，不要被历史查询阻塞
   const subscribed: { contract: Contract; provider: WebSocketProvider | JsonRpcProvider }[] = [];
   for (const contract of contracts) {
-    // 对于 SCR（频繁命中 WebSocket 429），使用 HTTP 轮询以规避限流；其他合约继续用 WebSocket
-    let provider: WebSocketProvider | JsonRpcProvider;
-    if (contract.name === "SCR") {
-      const chainId = inferChainIdFromRpc(contract.chainRPC);
-      const network = typeof chainId === "number" ? { chainId, name: inferChainNameById(chainId) } : undefined;
-      let httpProvider = new JsonRpcProvider(contract.chainRPC, network as any);
-      // 健康检查：若初始化即无法连通，则回退到 WebSocketProvider
-      try {
-        await httpProvider.getBlockNumber();
-        provider = httpProvider;
-      } catch (e) {
-        console.warn(`[provider] SCR JsonRpcProvider health check failed, fallback to WebSocket. err=${(e as Error)?.message}`);
-        const wsUrl = contract.chainRPC.startsWith("https://")
-          ? contract.chainRPC.replace("https://", "wss://")
-          : contract.chainRPC.replace("http://", "ws://");
-        provider = new WebSocketProvider(wsUrl);
-      }
-    } else {
-      const wsUrl = contract.chainRPC.startsWith("https://")
-        ? contract.chainRPC.replace("https://", "wss://")
-        : contract.chainRPC.replace("http://", "ws://");
-      provider = new WebSocketProvider(wsUrl);
-    }
+    const wsUrl = contract.chainRPC.startsWith("https://")
+      ? contract.chainRPC.replace("https://", "wss://")
+      : contract.chainRPC.replace("http://", "ws://");
+    const provider = new WebSocketProvider(wsUrl);
+
     const provType = (provider as unknown as { constructor?: { name?: string } })?.constructor?.name || "Provider";
     const rpcDesc = provType.includes("WebSocket")
       ? (provider as unknown as { _url?: string })?._url || contract.chainRPC
