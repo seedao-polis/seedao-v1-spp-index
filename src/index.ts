@@ -1579,9 +1579,28 @@ async function main() {
         : contract.chainRPC.replace("http://", "ws://");
       provider = new WebSocketProvider(wsUrl);
     }
+    const provType = (provider as unknown as { constructor?: { name?: string } })?.constructor?.name || "Provider";
+    const rpcDesc = provType.includes("WebSocket")
+      ? (provider as unknown as { _url?: string })?._url || contract.chainRPC
+      : contract.chainRPC;
+    console.log(
+      `[provider] contract=${contract.name} type=${provType} rpc=${rpcDesc}`,
+    );
+    console.log(
+      `[subscribe] starting: contract=${contract.name} events=${contract.events?.join(",")}`,
+    );
     await subscribeNewEvents(contract, provider as any);
+    console.log(
+      `[subscribe] done: contract=${contract.name}`,
+    );
 
+    console.log(
+      `[history] querying: contract=${contract.name} from latest with blockCount=0`,
+    );
     await queryHistoryEvents(contract, 0);
+    console.log(
+      `[history] done: contract=${contract.name}`,
+    );
   }
 
   // executing 'queryHistoryEvents()' every 5 minutes

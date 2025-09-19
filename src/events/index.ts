@@ -242,20 +242,30 @@ export async function subscribeNewEvents(
           contract.name
         }'s callback[${i}] (${new Date().toString()}) -----`,
       );
+      const provType = (provider as unknown as { constructor?: { name?: string } })?.constructor?.name || "Provider";
+      const eventName = contract.events[i];
+      const payload = [args.slice(0, args.length - 1)][0];
       const blockNumber = args[args.length - 1].log.blockNumber;
       const tx = args[args.length - 1].log.transactionHash;
-      const timestamp =
-        (await provider.getBlock(blockNumber))?.timestamp || Date.now();
+      console.log(
+        `[subscribe][${provType}] ${contract.name}.${eventName} payload_len=${payload?.length ?? 0} block=${blockNumber} tx=${tx}`,
+      );
+      const t0 = Date.now();
+      const timestamp = (await provider.getBlock(blockNumber))?.timestamp || Date.now();
       await contract.callbacks[i](
         [
           {
-            args: [args.slice(0, args.length - 1)][0],
+            args: payload,
             blockNumber: blockNumber,
             tx: tx,
             timestamp: timestamp,
           },
         ],
         "on",
+      );
+      const dt = Date.now() - t0;
+      console.log(
+        `[subscribe][done] ${contract.name}.${eventName} handled in ${dt}ms (block=${blockNumber} tx=${tx})`,
       );
     });
   }
