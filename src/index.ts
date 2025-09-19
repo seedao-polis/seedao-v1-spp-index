@@ -1567,11 +1567,23 @@ async function main() {
     ...snsResolver,
     ...scoreLend,
   ];
+  // 简单根据 RPC URL 推断 chainId，避免 JsonRpcProvider 初始化阶段的网络探测
+  function inferChainIdFromRpc(rpc: string): number | undefined {
+    const u = rpc.toLowerCase();
+    if (u.includes("polygon")) return 137;
+    if (u.includes("eth")) return 1;
+    if (u.includes("sepolia")) return 11155111;
+    if (u.includes("goerli")) return 5;
+    return undefined;
+  }
   for (const contract of contracts) {
     // 对于 SCR（频繁命中 WebSocket 429），使用 HTTP 轮询以规避限流；其他合约继续用 WebSocket
     let provider: WebSocketProvider | JsonRpcProvider;
     if (contract.name === "SCR") {
-      const httpProvider = new JsonRpcProvider(contract.chainRPC);
+      const chainId = inferChainIdFromRpc(contract.chainRPC);
+      const httpProvider = typeof chainId === "number"
+        ? new JsonRpcProvider(contract.chainRPC, chainId)
+        : new JsonRpcProvider(contract.chainRPC);
       provider = httpProvider;
     } else {
       const wsUrl = contract.chainRPC.startsWith("https://")
