@@ -27,7 +27,6 @@ import {
 } from "./api/service/erc1155";
 import { SNSNameregisteredTxService, SNSService } from "./api/service/sns";
 import { ethers, WebSocketProvider } from "ethers";
-import { WebSocket } from "ws";
 import {
   findCharacterSet,
   getCodePointLength,
@@ -1569,55 +1568,12 @@ async function main() {
     ...scoreLend,
   ];
   for (const contract of contracts) {
-    // <+++++++++++++++++++++++++++++++++
-    function createWebSocket() {
-      const url = contract.chainRPC.startsWith("https://")
-        ? contract.chainRPC.replace("https://", "wss://")
-        : contract.chainRPC.replace("http://", "ws://");
-
-      const ws = new WebSocket(url);
-      // listen 'open' event and send 'ping' interval
-      let ping: any;
-      ws.on("open", () => {
-        ping = setInterval(() => {
-          // console.log(`Sending Websocket ping... [contract=${contract.name}]`);
-          ws.send("ping");
-        }, 4000); // keep alive
-      });
-      // listen 'close' event
-      ws.on("close", () => {
-        console.log(
-          `WebSocket disconnected. Reconnecting... [contract=${contract.name}]`,
-        );
-        clearInterval(ping);
-        setTimeout(async () => {
-          // <--------------------
-          const provider = new WebSocketProvider(createWebSocket());
-          await subscribeNewEvents(contract, provider);
-          // <--------------------
-        }, 100);
-      });
-      // listen 'error' event
-      ws.on("error", (e) => {
-        console.log(
-          `WebSocket error: [${e}]. Reconnecting... [contract=${contract.name}]`,
-        );
-        clearInterval(ping);
-        setTimeout(async () => {
-          // <--------------------
-          const provider = new WebSocketProvider(createWebSocket());
-          await subscribeNewEvents(contract, provider);
-          // <--------------------
-        }, 100);
-      });
-
-      return ws;
-    }
-    // <+++++++++++++++++++++++++++++++++
-    // <--------------------
-    const provider = new WebSocketProvider(createWebSocket());
+    // 使用 ethers 内置的 WebSocketProvider 管理连接与心跳，避免自建 ws 造成重复重连和资源泄露
+    const wsUrl = contract.chainRPC.startsWith("https://")
+      ? contract.chainRPC.replace("https://", "wss://")
+      : contract.chainRPC.replace("http://", "ws://");
+    const provider = new WebSocketProvider(wsUrl);
     await subscribeNewEvents(contract, provider);
-    // <--------------------
 
     await queryHistoryEvents(contract, 0);
   }
