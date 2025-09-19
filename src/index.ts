@@ -26,7 +26,7 @@ import {
   ERC1155TokenTransferBatchTxService,
 } from "./api/service/erc1155";
 import { SNSNameregisteredTxService, SNSService } from "./api/service/sns";
-import { ethers, WebSocketProvider } from "ethers";
+import { ethers, WebSocketProvider, JsonRpcProvider } from "ethers";
 import {
   findCharacterSet,
   getCodePointLength,
@@ -1568,12 +1568,18 @@ async function main() {
     ...scoreLend,
   ];
   for (const contract of contracts) {
-    // 使用 ethers 内置的 WebSocketProvider 管理连接与心跳，避免自建 ws 造成重复重连和资源泄露
-    const wsUrl = contract.chainRPC.startsWith("https://")
-      ? contract.chainRPC.replace("https://", "wss://")
-      : contract.chainRPC.replace("http://", "ws://");
-    const provider = new WebSocketProvider(wsUrl);
-    await subscribeNewEvents(contract, provider);
+    // 对于 SCR（频繁命中 WebSocket 429），使用 HTTP 轮询以规避限流；其他合约继续用 WebSocket
+    let provider: WebSocketProvider | JsonRpcProvider;
+    if (contract.name === "SCR") {
+      const httpProvider = new JsonRpcProvider(contract.chainRPC);
+      provider = httpProvider;
+    } else {
+      const wsUrl = contract.chainRPC.startsWith("https://")
+        ? contract.chainRPC.replace("https://", "wss://")
+        : contract.chainRPC.replace("http://", "ws://");
+      provider = new WebSocketProvider(wsUrl);
+    }
+    await subscribeNewEvents(contract, provider as any);
 
     await queryHistoryEvents(contract, 0);
   }
