@@ -1576,15 +1576,40 @@ async function main() {
     if (u.includes("goerli")) return 5;
     return undefined;
   }
+  function inferChainNameById(chainId?: number): string {
+    switch (chainId) {
+      case 1:
+        return "homestead"; // ethers 默认主网名称
+      case 137:
+        return "matic"; // ethers 常用的 Polygon 网络名称
+      case 11155111:
+        return "sepolia";
+      case 5:
+        return "goerli";
+      default:
+        return "unknown";
+    }
+  }
+  // 先为所有合约建立 provider 并完成订阅，不要被历史查询阻塞
+  const subscribed: { contract: Contract; provider: WebSocketProvider | JsonRpcProvider }[] = [];
   for (const contract of contracts) {
     // 对于 SCR（频繁命中 WebSocket 429），使用 HTTP 轮询以规避限流；其他合约继续用 WebSocket
     let provider: WebSocketProvider | JsonRpcProvider;
     if (contract.name === "SCR") {
       const chainId = inferChainIdFromRpc(contract.chainRPC);
-      const httpProvider = typeof chainId === "number"
-        ? new JsonRpcProvider(contract.chainRPC, chainId)
-        : new JsonRpcProvider(contract.chainRPC);
-      provider = httpProvider;
+      const network = typeof chainId === "number" ? { chainId, name: inferChainNameById(chainId) } : undefined;
+      let httpProvider = new JsonRpcProvider(contract.chainRPC, network as any);
+      // 健康检查：若初始化即无法连通，则回退到 WebSocketProvider
+      try {
+        await httpProvider.getBlockNumber();
+        provider = httpProvider;
+      } catch (e) {
+        console.warn(`[provider] SCR JsonRpcProvider health check failed, fallback to WebSocket. err=${(e as Error)?.message}`);
+        const wsUrl = contract.chainRPC.startsWith("https://")
+          ? contract.chainRPC.replace("https://", "wss://")
+          : contract.chainRPC.replace("http://", "ws://");
+        provider = new WebSocketProvider(wsUrl);
+      }
     } else {
       const wsUrl = contract.chainRPC.startsWith("https://")
         ? contract.chainRPC.replace("https://", "wss://")
@@ -1605,15 +1630,26 @@ async function main() {
     console.log(
       `[subscribe] done: contract=${contract.name}`,
     );
-
-    console.log(
-      `[history] querying: contract=${contract.name} from latest with blockCount=0`,
-    );
-    await queryHistoryEvents(contract, 0);
-    console.log(
-      `[history] done: contract=${contract.name}`,
-    );
+    subscribed.push({ contract, provider });
   }
+
+  // 订阅完成后，再异步启动历史查询，避免首个合约长耗时导致“看起来只循环一次”
+  subscribed.forEach(({ contract }, idx) => {
+    const delay = 500 * idx; // 以 500ms 逐个错峰，缓解 RPC 压力
+    setTimeout(async () => {
+      try {
+        console.log(
+          `[history] querying: contract=${contract.name} from latest with blockCount=0 (delayed=${delay}ms)`,
+        );
+        await queryHistoryEvents(contract, 0);
+        console.log(
+          `[history] done: contract=${contract.name}`,
+        );
+      } catch (e) {
+        console.error(`[history] failed: contract=${contract.name} err=${(e as Error)?.message}`);
+      }
+    }, delay);
+  });
 
   // executing 'queryHistoryEvents()' every 5 minutes
   // refer: https://www.npmjs.com/package/node-cron
