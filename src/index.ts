@@ -1606,11 +1606,16 @@ async function main() {
   }
   // 先为所有合约建立 provider 并完成订阅，不要被历史查询阻塞
   const subscribed: { contract: Contract; provider: WebSocketProvider | JsonRpcProvider }[] = [];
+  const wsProviderCache = new Map<string, WebSocketProvider>();
   for (const contract of contracts) {
     const wsUrl = contract.chainRPC.startsWith("https://")
       ? contract.chainRPC.replace("https://", "wss://")
       : contract.chainRPC.replace("http://", "ws://");
-    const provider = new WebSocketProvider(wsUrl);
+    let provider = wsProviderCache.get(wsUrl);
+    if (!provider) {
+      provider = new WebSocketProvider(wsUrl);
+      wsProviderCache.set(wsUrl, provider);
+    }
 
     const provType = (provider as unknown as { constructor?: { name?: string } })?.constructor?.name || "Provider";
     const rpcDesc = provType.includes("WebSocket")
