@@ -212,7 +212,7 @@ export async function queryHistoryEvents(contract: Contract, blockCount: number 
 
 export async function subscribeNewEvents(
   contract: Contract,
-  provider: WebSocketProvider,
+  provider: WebSocketProvider | JsonRpcProvider,
 ) {
   if (contract.events.length == 0 || contract.callbacks.length == 0) {
     return;
