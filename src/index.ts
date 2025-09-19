@@ -146,6 +146,17 @@ async function main() {
   startServer(client);
   console.log("[startup] HTTP server started. Initializing indexer...");
 
+  // 全局错误兜底，避免未捕获异常导致进程退出
+  if (!(global as any).__INDEXER_ERROR_GUARDS__) {
+    (global as any).__INDEXER_ERROR_GUARDS__ = true;
+    process.on("uncaughtException", (err) => {
+      console.error(`[fatal][uncaughtException] ${err?.message || err}`);
+    });
+    process.on("unhandledRejection", (reason) => {
+      console.error(`[fatal][unhandledRejection] ${String(reason)}`);
+    });
+  }
+
   // 'ERC20' 'ERC721' 'ERC1155' Contracts
   console.log("[startup] building ERC20 contracts from conf.json...");
   const ERC20Contracts: Contract[] = await Promise.all(
@@ -1607,6 +1618,7 @@ async function main() {
   // 先为所有合约建立 provider 并完成订阅，不要被历史查询阻塞
   const subscribed: { contract: Contract; provider: WebSocketProvider | JsonRpcProvider }[] = [];
   const wsProviderCache = new Map<string, WebSocketProvider>();
+  const wsProviderWired = new WeakSet<WebSocketProvider>();
   for (const contract of contracts) {
     const wsUrl = contract.chainRPC.startsWith("https://")
       ? contract.chainRPC.replace("https://", "wss://")
@@ -1615,6 +1627,36 @@ async function main() {
     if (!provider) {
       provider = new WebSocketProvider(wsUrl);
       wsProviderCache.set(wsUrl, provider);
+    }
+
+    // 为底层 ws 连接注册错误与关闭事件，避免 429/握手失败导致未捕获异常使进程退出
+    if (!wsProviderWired.has(provider)) {
+      wsProviderWired.add(provider);
+      const ws: any = (provider as any)?._websocket;
+      if (ws && typeof ws.on === "function") {
+        try {
+          ws.on("error", (e: any) => {
+            console.error(`{ws}[error] url=${wsUrl} err=${e?.message || e}`);
+          });
+          ws.on("close", (code: any, reason: any) => {
+            console.warn(`{ws}[close] url=${wsUrl} code=${code} reason=${reason}`);
+          });
+          ws.on?.("unexpected-response", (_req: any, res: any) => {
+            try {
+              const status = res?.statusCode ?? res?.status;
+              if (status === 429) {
+                console.error(`{ws}[unexpected-response] url=${wsUrl} status=429 (rate limited)`);
+              } else {
+                console.error(`{ws}[unexpected-response] url=${wsUrl} status=${status}`);
+              }
+            } catch (_ignored) {
+              console.error(`{ws}[unexpected-response] url=${wsUrl}`);
+            }
+          });
+        } catch (wireErr) {
+          console.warn(`{ws}[wire-failed] url=${wsUrl} err=${(wireErr as Error)?.message}`);
+        }
+      }
     }
 
     const provType = (provider as unknown as { constructor?: { name?: string } })?.constructor?.name || "Provider";
