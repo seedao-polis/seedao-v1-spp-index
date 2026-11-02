@@ -6,7 +6,9 @@ FROM node:lts-alpine as BUILD
 # Set the working directory inside the container
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat openssl
+# node:lts no longer includes Yarn. This repo uses Yarn 1 (yarn.lock v1).
+RUN apk add --no-cache libc6-compat openssl \
+ && npm install -g yarn@1.22.22
 
 # Copy the package.json and yarn.lock files to the container
 COPY package*.json yarn.lock ./
@@ -16,6 +18,11 @@ RUN yarn install --frozen-lockfile
 
 # Copy the rest of the application code to the container
 COPY . .
+
+# conf.json is gitignored. Keep a real file from the build context when
+# present; otherwise use the example so tsc can resolve the import.
+# Production should mount the real file over /app/conf.json.
+RUN if [ ! -f conf.json ]; then cp conf.json.example conf.json; fi
 
 # Run prisma geneate and build production file
 RUN yarn prisma generate && yarn build
@@ -28,7 +35,8 @@ FROM node:lts-alpine
 # Set the working directory inside the container
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat openssl
+RUN apk add --no-cache libc6-compat openssl \
+ && npm install -g yarn@1.22.22
 
 # Copy the built application files from the previous stage
 COPY --from=BUILD /app/dist ./dist
